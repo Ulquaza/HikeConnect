@@ -1,4 +1,6 @@
 
+using Microsoft.AspNetCore.HttpOverrides;
+
 namespace HikeConnect.Api
 {
     public class Program
@@ -13,6 +15,12 @@ namespace HikeConnect.Api
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            //builder.Services.Configure<ForwardedHeadersOptions>(options =>
+            //{
+            //    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            //    options.KnownNetworks.Clear();
+            //    options.KnownProxies.Clear();
+            //});
 
             var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 
@@ -36,6 +44,7 @@ namespace HikeConnect.Api
                 app.UseSwaggerUI();
             }
 
+            app.UseForwardedHeaders();
             app.UseHttpsRedirection();
             app.UseCors("AllowWebApp");
             app.UseAuthorization();

@@ -11,7 +11,12 @@ namespace HikeConnect.WebApp
             builder.RootComponents.Add<App>("#app");
             builder.RootComponents.Add<HeadOutlet>("head::after");
 
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]!) });
+            var apiBaseUrl = builder.Configuration["ApiBaseUrl"];
+            var apiBaseUri = Uri.TryCreate(apiBaseUrl, UriKind.Absolute, out var absoluteUri)
+                ? absoluteUri
+                : new Uri(new Uri(builder.HostEnvironment.BaseAddress), apiBaseUrl ?? "api/");
+
+            builder.Services.AddScoped(_ => new HttpClient { BaseAddress = apiBaseUri });
 
             await builder.Build().RunAsync();
         }
