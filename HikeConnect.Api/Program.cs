@@ -14,6 +14,19 @@ namespace HikeConnect.Api
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowWebApp", policy =>
+                {
+                    policy
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .WithOrigins(origins!);
+                });
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -24,6 +37,7 @@ namespace HikeConnect.Api
             }
 
             app.UseHttpsRedirection();
+            app.UseCors("AllowWebApp");
             app.UseAuthorization();
 
             app.MapControllers();

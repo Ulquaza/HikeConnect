@@ -59,7 +59,7 @@
     }
 
         .loading-progress circle:last-child {
-            stroke: #1b6ec2;
+            stroke: #FFA15D;
             stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
             transition: stroke-dasharray 0.05s ease-in-out;
         }
@@ -86,4 +86,49 @@ code {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Merriweather', serif;
+    background: #1C1A19;
+    color: #F2EDE9;
+}
+
+.container {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card {
+    text-align: center;
+    padding: 40px 32px;
+    border-radius: 16px;
+    background: #292523;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    max-width: 520px;
+}
+
+h1 {
+    margin-bottom: 16px;
+    font-size: 32px;
+}
+
+.subtitle {
+    opacity: 0.8;
+    margin-bottom: 20px;
+}
+
+.status span {
+    font-weight: bold;
+    color: #FFA15D;
+}
+
+.time {
+    margin-top: 20px;
+    font-size: 12px;
+    opacity: 0.5;
 }
