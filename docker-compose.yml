@@ -14,7 +14,7 @@ services:
       context: .
       dockerfile: HikeConnect.WebApp/Dockerfile
     ports:
-      - "9011:7029"
+      - "9011:80"
     depends_on:
       - api
     restart: unless-stopped

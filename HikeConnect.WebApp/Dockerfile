@@ -7,12 +7,13 @@ RUN dotnet restore HikeConnect.WebApp/HikeConnect.WebApp.csproj
 COPY . .
 RUN dotnet publish HikeConnect.WebApp/HikeConnect.WebApp.csproj -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
-WORKDIR /app
+FROM nginx:alpine AS final
+WORKDIR /usr/share/nginx/html
 
 COPY --from=build /app/publish/wwwroot .
 
-ENV ASPNETCORE_URLS=https://+:7029
-EXPOSE 7029
+COPY HikeConnect.WebApp/nginx.conf /etc/nginx/conf.d/default.conf
 
-ENTRYPOINT ["dotnet", "HikeConnect.WebApp.dll"]
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
