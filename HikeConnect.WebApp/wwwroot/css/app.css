@@ -96,6 +96,20 @@ html, body {
     color: #F2EDE9;
 }
 
+h1 {
+    margin-bottom: 16px;
+    font-size: 32px;
+}
+
+a:link {
+    color: #FFA15D;
+    font-size: 14px;
+}
+
+a:visited {
+    color: #FFB885;
+}
+
 .container {
     height: 100vh;
     display: flex;
@@ -112,11 +126,6 @@ html, body {
     max-width: 520px;
 }
 
-h1 {
-    margin-bottom: 16px;
-    font-size: 32px;
-}
-
 .subtitle {
     opacity: 0.8;
     margin-bottom: 20px;
@@ -131,4 +140,98 @@ h1 {
     margin-top: 20px;
     font-size: 12px;
     opacity: 0.5;
+}
+
+.links {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+}
+
+.about-card {
+    max-width: 520px;
+}
+
+.about-content {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.about-image {
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.about-text {
+    text-align: left;
+}
+
+    .about-text h2 {
+        margin-top: 0;
+        margin-bottom: 12px;
+    }
+
+    .about-text p {
+        opacity: 0.8;
+        margin-bottom: 10px;
+        line-height: 1.4;
+    }
+
+.back {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 14px;
+    opacity: 0.5;
+}
+
+.contacts-card {
+    max-width: 520px;
+}
+
+.contacts-content {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    text-align: left;
+}
+
+    .contacts-content h2 {
+        margin-top: 0;
+        margin-bottom: 16px;
+        text-align: center;
+    }
+
+.contact-list p {
+    margin: 8px 0;
+    opacity: 0.85;
+}
+
+.contact-list span {
+    font-weight: bold;
+    color: #FFA15D;
+    margin-right: 6px;
+}
+
+.contact-list a {
+    color: #F2EDE9;
+    text-decoration: none;
+    opacity: 0.8;
+}
+
+    .contact-list a:hover {
+        opacity: 1;
+        text-decoration: underline;
+    }
+
+.contacts-image {
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 12px;
+    flex-shrink: 0;
 }
