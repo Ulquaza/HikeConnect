@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="../HikeConnect.Application/HikeConnect.Application.csproj" Id="260e550c-78c8-448d-99dc-ef5cbf931c0f" />
+  <Project Path="../HikeConnect.Core/HikeConnect.Core.csproj" Id="0cbda5a3-f865-4a20-a5a2-7c5c9099b1fe" />
+  <Project Path="../HikeConnect.Infrastructure/HikeConnect.Infrastructure.csproj" Id="f6fe7d41-9622-40dd-8383-7e36c724d264" />
+  <Project Path="../HikeConnect.WebApp/HikeConnect.WebApp.csproj" Id="ac348ead-e728-4ac4-bfd1-aef896f45e98" />
+  <Project Path="HikeConnect.Api.csproj" />
+</Solution>
