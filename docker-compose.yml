@@ -13,7 +13,7 @@ services:
     build:
       context: .
       dockerfile: HikeConnect.WebApp/Dockerfile
-    expose:
+    ports:
       - "9011:7029"
     depends_on:
       - api
