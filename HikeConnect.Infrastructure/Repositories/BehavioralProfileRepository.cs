@@ -14,12 +14,14 @@ namespace HikeConnect.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task AddAsync(BehavioralProfile profile, CancellationToken cancellationToken = default)
+        public async Task<BehavioralProfile?> AddAsync(BehavioralProfile profile, CancellationToken cancellationToken = default)
         {
-            if (profile is null) return;
+            if (profile is null) return null;
 
             _context.BehavioralProfiles.Add(profile);
             await _context.SaveChangesAsync(cancellationToken);
+
+            return profile;
         }
 
         public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
@@ -54,12 +56,14 @@ namespace HikeConnect.Infrastructure.Repositories
                 .FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
         }
 
-        public async Task UpdateAsync(BehavioralProfile profile, CancellationToken cancellationToken = default)
+        public async Task<BehavioralProfile?> UpdateAsync(BehavioralProfile profile, CancellationToken cancellationToken = default)
         {
-            if (profile is null) return;
+            if (profile is null) return null;
 
             _context.BehavioralProfiles.Update(profile);
             await _context.SaveChangesAsync(cancellationToken);
+
+            return profile;
         }
     }
 }

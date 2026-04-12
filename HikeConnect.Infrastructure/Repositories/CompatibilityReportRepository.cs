@@ -14,12 +14,14 @@ namespace HikeConnect.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task AddAsync(CompatibilityReport report, CancellationToken cancellationToken = default)
+        public async Task<CompatibilityReport?> AddAsync(CompatibilityReport report, CancellationToken cancellationToken = default)
         {
-            if (report is null) return;
+            if (report is null) return null;
 
             _context.CompatibilityReports.Add(report);
             await _context.SaveChangesAsync(cancellationToken);
+
+            return report;
         }
 
         public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)

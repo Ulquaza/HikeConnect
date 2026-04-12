@@ -14,12 +14,14 @@ namespace HikeConnect.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task AddAsync(Trip trip, CancellationToken ct = default)
+        public async Task<Trip?> AddAsync(Trip trip, CancellationToken ct = default)
         {
-            if (trip is null) return;
+            if (trip is null) return null;
 
             _context.Trips.Add(trip);
             await _context.SaveChangesAsync(ct);
+
+            return trip;
         }
 
         public async Task DeleteAsync(Guid id, CancellationToken ct = default)
@@ -46,12 +48,14 @@ namespace HikeConnect.Infrastructure.Repositories
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
         }
 
-        public async Task UpdateAsync(Trip trip, CancellationToken ct = default)
+        public async Task<Trip?> UpdateAsync(Trip trip, CancellationToken ct = default)
         {
-            if (trip is null) return;
+            if (trip is null) return null;
 
             _context.Trips.Update(trip);
             await _context.SaveChangesAsync(ct);
+
+            return trip;
         }
     }
 }

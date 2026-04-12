@@ -14,12 +14,14 @@ namespace HikeConnect.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task AddAsync(ParticipationRequest request, CancellationToken ct = default)
+        public async Task<ParticipationRequest?> AddAsync(ParticipationRequest request, CancellationToken ct = default)
         {
-            if (request is null) return;
+            if (request is null) return null;
 
             _context.ParticipationRequests.Add(request);
             await _context.SaveChangesAsync(ct);
+
+            return request;
         }
 
         public async Task DeleteAsync(ParticipationRequest request, CancellationToken ct = default)
@@ -37,7 +39,7 @@ namespace HikeConnect.Infrastructure.Repositories
                 .AnyAsync(x => x.TripId == tripId && x.UserId == userId, ct);
         }
 
-        public async Task<IEnumerable<ParticipationRequest>> GetAllAsync(CancellationToken ct = default)
+        public async Task<IReadOnlyList<ParticipationRequest>> GetAllAsync(CancellationToken ct = default)
         {
             return await _context.ParticipationRequests
                 .AsNoTracking()
@@ -59,7 +61,7 @@ namespace HikeConnect.Infrastructure.Repositories
                 .FirstOrDefaultAsync(ct);
         }
 
-        public async Task<IEnumerable<ParticipationRequest>> GetByTripIdAsync(Guid tripId, CancellationToken ct = default)
+        public async Task<IReadOnlyList<ParticipationRequest>> GetByTripIdAsync(Guid tripId, CancellationToken ct = default)
         {
             return await _context.ParticipationRequests
                 .AsNoTracking()
@@ -67,7 +69,7 @@ namespace HikeConnect.Infrastructure.Repositories
                 .ToListAsync(ct);
         }
 
-        public async Task<IEnumerable<ParticipationRequest>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
+        public async Task<IReadOnlyList<ParticipationRequest>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
         {
             return await _context.ParticipationRequests
                 .AsNoTracking()
@@ -75,12 +77,14 @@ namespace HikeConnect.Infrastructure.Repositories
                 .ToListAsync(ct);
         }
 
-        public async Task UpdateAsync(ParticipationRequest request, CancellationToken ct = default)
+        public async Task<ParticipationRequest?> UpdateAsync(ParticipationRequest request, CancellationToken ct = default)
         {
-            if (request is null) return;
+            if (request is null) return null;
 
             _context.ParticipationRequests.Update(request);
             await _context.SaveChangesAsync(ct);
+
+            return request;
         }
     }
 }

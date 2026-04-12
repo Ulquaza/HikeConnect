@@ -4,7 +4,8 @@
     {
         Pending,    // в ожидании
         Approved,   // принят
-        Rejected    // отклонён
+        Rejected,   // отклонён
+        Canceled    // отменён
     }
 
     public class ParticipationRequest
