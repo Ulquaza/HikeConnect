@@ -13,9 +13,6 @@ namespace HikeConnect.Infrastructure.Configurations.EntityFramework
             builder.Property(e => e.Status)
                 .IsRequired(true);
 
-            builder.Property(e => e.CompatibilityPercentage)
-                .IsRequired(true);
-
             builder.Property(e => e.AppliedAt)
                 .IsRequired(true);
 

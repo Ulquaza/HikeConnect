@@ -16,6 +16,9 @@ namespace HikeConnect.Infrastructure.Configurations.EntityFramework
             builder.Property(e => e.MatchPoints)
                 .HasColumnType("jsonb");
 
+            builder.Property(e => e.CompatibilityPercentage)
+                .IsRequired(true);
+
             builder.Property(e => e.SummaryText)
                 .HasMaxLength(2048)
                 .IsRequired(true);
