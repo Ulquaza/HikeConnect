@@ -28,11 +28,6 @@ namespace HikeConnect.Infrastructure.Configurations.EntityFramework
 
             builder.Property(e => e.RefreshTokenExpiresAt)
                 .IsRequired(false);
-
-            builder.HasOne(e => e.Trip)
-                .WithMany(e => e.ParticipationRequests)
-                .HasForeignKey(e => e.TripId)
-                .IsRequired(true);
         }
     }
 }

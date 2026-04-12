@@ -10,7 +10,7 @@ namespace HikeConnect.Infrastructure.Contexts
     {
         public DbSet<BehavioralProfile> BehavioralProfiles { get; set; }
         public DbSet<CompatibilityReport> CompatibilityReports { get; set; }
-        public DbSet<User> ParticipationRequests { get; set; }
+        public DbSet<ParticipationRequest> ParticipationRequests { get; set; }
         public DbSet<Trip> Trips { get; set; }
 
         public HikeConnectContext(DbContextOptions options) : base(options)

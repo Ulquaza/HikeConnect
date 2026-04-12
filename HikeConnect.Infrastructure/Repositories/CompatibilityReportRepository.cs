@@ -1,38 +1,65 @@
 ﻿using HikeConnect.Core.Entities;
 using HikeConnect.Core.Interfaces;
+using HikeConnect.Infrastructure.Contexts;
+using Microsoft.EntityFrameworkCore;
 
 namespace HikeConnect.Infrastructure.Repositories
 {
     internal class CompatibilityReportRepository : ICompatibilityReportRepository
     {
-        public Task AddAsync(CompatibilityReport report, CancellationToken cancellationToken = default)
+        private readonly HikeConnectContext _context;
+
+        public CompatibilityReportRepository(HikeConnectContext context)
         {
-            throw new NotImplementedException();
+            _context = context;
         }
 
-        public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task AddAsync(CompatibilityReport report, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            if (report is null) return;
+
+            _context.CompatibilityReports.Add(report);
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public Task<IEnumerable<CompatibilityReport>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var report = await _context.CompatibilityReports
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+            if (report is null) return;
+
+            _context.CompatibilityReports.Remove(report);
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public Task<IEnumerable<CompatibilityReport>> GetByAuthorIdAsync(Guid authorId, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<CompatibilityReport>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return await _context.CompatibilityReports
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
         }
 
-        public Task<CompatibilityReport?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<CompatibilityReport>> GetByAuthorIdAsync(Guid authorId, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return await _context.CompatibilityReports
+                .AsNoTracking()
+                .Where(x => x.AuthorId == authorId)
+                .ToListAsync(cancellationToken);
         }
 
-        public Task<CompatibilityReport?> GetByUsersIdAsync(Guid authorId, Guid targetId, CancellationToken cancellationToken = default)
+        public async Task<CompatibilityReport?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return await _context.CompatibilityReports
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        }
+
+        public async Task<CompatibilityReport?> GetByUsersIdAsync(Guid authorId, Guid targetId, CancellationToken cancellationToken = default)
+        {
+            return await _context.CompatibilityReports
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.AuthorId == authorId && x.TargetId == targetId, cancellationToken);
         }
     }
 }

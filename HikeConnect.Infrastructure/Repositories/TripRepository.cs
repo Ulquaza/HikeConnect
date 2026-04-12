@@ -1,33 +1,57 @@
 ﻿using HikeConnect.Core.Entities;
 using HikeConnect.Core.Interfaces;
+using HikeConnect.Infrastructure.Contexts;
+using Microsoft.EntityFrameworkCore;
 
 namespace HikeConnect.Infrastructure.Repositories
 {
     internal class TripRepository : ITripRepository
     {
-        public Task AddAsync(Trip trip, CancellationToken ct = default)
+        private readonly HikeConnectContext _context;
+
+        public TripRepository(HikeConnectContext context)
         {
-            throw new NotImplementedException();
+            _context = context;
         }
 
-        public Task DeleteAsync(Guid id, CancellationToken ct = default)
+        public async Task AddAsync(Trip trip, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            if (trip is null) return;
+
+            _context.Trips.Add(trip);
+            await _context.SaveChangesAsync(ct);
         }
 
-        public Task<IEnumerable<Trip>> GetAllAsync(CancellationToken ct = default)
+        public async Task DeleteAsync(Guid id, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            var trip = await _context.Trips.FirstOrDefaultAsync(x => x.Id == id, ct);
+
+            if (trip is null) return;
+
+            _context.Trips.Remove(trip);
+            await _context.SaveChangesAsync(ct);
         }
 
-        public Task<Trip?> GetByIdAsync(Guid id, CancellationToken ct = default)
+        public async Task<IEnumerable<Trip>> GetAllAsync(CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            return await _context.Trips
+                .Include(x => x.ParticipationRequests)
+                .ToListAsync(ct);
         }
 
-        public Task UpdateAsync(Trip trip, CancellationToken ct = default)
+        public async Task<Trip?> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            return await _context.Trips
+                .Include(x => x.ParticipationRequests)
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
+        }
+
+        public async Task UpdateAsync(Trip trip, CancellationToken ct = default)
+        {
+            if (trip is null) return;
+
+            _context.Trips.Update(trip);
+            await _context.SaveChangesAsync(ct);
         }
     }
 }
