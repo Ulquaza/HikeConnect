@@ -1,4 +1,5 @@
 
+using HikeConnect.Infrastructure.Configurations;
 using Microsoft.AspNetCore.HttpOverrides;
 
 namespace HikeConnect.Api
@@ -21,6 +22,8 @@ namespace HikeConnect.Api
             //    options.KnownNetworks.Clear();
             //    options.KnownProxies.Clear();
             //});
+
+            builder.Services.AddInfrastructure(builder.Configuration);
 
             var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 

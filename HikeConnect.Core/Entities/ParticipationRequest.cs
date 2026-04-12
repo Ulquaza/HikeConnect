@@ -9,9 +9,9 @@
 
     public class ParticipationRequest
     {
-        public string Id { get; set; }
-        public string TripId { get; set; }
-        public string UserId { get; set; }
+        public Guid Id { get; set; }
+        public Guid TripId { get; set; }
+        public Guid UserId { get; set; }
         public ParticipationRequestStatus Status { get; set; }
         public int CompatibilityPercentage { get; set; }
         public DateTime AppliedAt { get; set; }

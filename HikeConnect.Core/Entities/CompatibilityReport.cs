@@ -4,9 +4,9 @@ namespace HikeConnect.Core.Entities
 {
     public class CompatibilityReport
     {
-        public string Id { get; set; }
-        public string AuthorId { get; set; }
-        public string TargetId { get; set; }
+        public Guid Id { get; set; }
+        public Guid AuthorId { get; set; }
+        public Guid TargetId { get; set; }
         public ICollection<CompatibilityPoint> RiskPoints { get; set; }   // jsonb
         public ICollection<CompatibilityPoint> MatchPoints { get; set; }  // jsonb
         public string SummaryText { get; set; }

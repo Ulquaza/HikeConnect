@@ -2,7 +2,7 @@
 
 namespace HikeConnect.Core.Entities
 {
-    public class User : IdentityUser
+    public class User : IdentityUser<Guid>
     {
         public string FullName { get; set; }
         public string? Bio { get; set; }
