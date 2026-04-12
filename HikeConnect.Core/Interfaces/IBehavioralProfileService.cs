@@ -2,9 +2,9 @@
 
 namespace HikeConnect.Core.Interfaces
 {
-    public interface IBehavioralProfileRepository
+    public interface IBehavioralProfileService
     {
-        Task<BehavioralProfile?> AddAsync(BehavioralProfile profile, CancellationToken cancellationToken = default);
+        Task<BehavioralProfile?> CreateAsync(BehavioralProfile profile, CancellationToken cancellationToken = default);
 
         Task<BehavioralProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<BehavioralProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);

@@ -9,11 +9,11 @@
 
     public class Trip
     {
-        public string Id { get; set; }
-        public string AuthorId { get; set; }
+        public Guid Id { get; set; }
+        public Guid AuthorId { get; set; }
         public string Description { get; set; }
-        public DateTime StartAt { get; set; }
         public TripStatus Status { get; set; }
+        public DateTime StartAt { get; set; }
         public DateTime CreatedAt { get; set; }
 
         public virtual User Author { get; set; }
