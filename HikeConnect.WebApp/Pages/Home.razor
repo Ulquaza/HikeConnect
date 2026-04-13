@@ -1,67 +1,171 @@
 ﻿@page "/"
 
-@inject HttpClient Http
+<PageTitle>Главная - HikeConnect</PageTitle>
 
-<PageTitle>Home - HikeConnect</PageTitle>
+<div class="hero">
+    <h1 class="hero-title">
+        Найди свою походную группу по <span class="accent">вайбу</span>, а не только по темпу
+    </h1>
 
-<div class="container">
-    <div class="card">
-        <h1>Добро пожаловать в HikeConnect</h1>
+    <p class="hero-subtitle">
+        Мы используем поведенческую психологию, чтобы подбирать тебе напарников по походам,
+        с которыми совпадают энергия общения и подход к маршруту
+    </p>
 
-        <p class="subtitle">
-            Проект находится в разработке.
-        </p>
+    <button class="hero-button">
+        Найти свою группу
+    </button>
+</div>
 
-        <p class="status">
-            Статус сервера: <span>@status</span>
-        </p>
+<div class="style-section">
+    <h2 class="style-title">КАКОЙ У ТЕБЯ СТИЛЬ ПОХОДОВ?</h2>
 
-        <p class="time">
-            @DateTime.Now.ToString("dd.MM.yyyy HH:mm")
-        </p>
+    <div class="style-cards">
+        <div class="style-card">
+            <img src="/images/silent.png" alt="Silent" class="style-icon" />
+            <div class="style-text">ТИХИЙ</div>
+        </div>
 
-        <div class="links">
-            <a href="/about">О проекте</a>
-            <a href="/contacts">Контакты</a>
+        <div class="style-card">
+            <img src="/images/social.png" alt="Social" class="style-icon" />
+            <div class="style-text">ОБЩИТЕЛЬНЫЙ</div>
+        </div>
+
+        <div class="style-card">
+            <img src="/images/sporty.png" alt="Sporty" class="style-icon" />
+            <div class="style-text">СПОРТИВНЫЙ</div>
         </div>
     </div>
 </div>
 
+<div class="how-section">
+    <div class="how-steps">
+        <div class="how-step">
+            <div class="step-number">1</div>
+            <h3>Создай профиль походника</h3>
+            <p>Расскажи о своём опыте, стиле походов и ожиданиях от команды</p>
+        </div>
+
+        <div class="how-step">
+            <div class="step-number">2</div>
+            <h3>Пройди поведенческий опрос</h3>
+            <p>Мы определим твой стиль принятия решений, отношение к риску и взаимодействию в группе</p>
+        </div>
+
+        <div class="how-step">
+            <div class="step-number">3</div>
+            <h3>Найди совместимых напарников</h3>
+            <p>Сервис покажет людей, с которыми у тебя совпадают темп, подход и «вайб»</p>
+        </div>
+    </div>
+</div>
+
+<div class="trips-section">
+    <h2 class="trips-title">Предстоящие походы</h2>
+
+    <div class="trips-grid">
+        <!-- Карточка 1 -->
+        <div class="trip-card">
+            <img src="/images/trip1.webp" class="trip-image" />
+
+            <div class="trip-content">
+                <div class="trip-header">
+                    <div class="trip-name">Ергаки: озеро Художников</div>
+                    <div class="trip-date">ИЮЛ 12</div>
+                </div>
+
+                <div class="trip-description">
+                    Неспешный поход с упором на природу, фото и спокойную атмосферу
+                </div>
+            </div>
+
+            <div class="trip-footer">
+                <div>СОВПАДЕНИЕ ПО ВАЙБУ</div>
+                <div class="match">87%</div>
+            </div>
+        </div>
+
+        <!-- Карточка 2 -->
+        <div class="trip-card">
+            <img src="/images/trip2.jpg" class="trip-image" />
+
+            <div class="trip-content">
+                <div class="trip-header">
+                    <div class="trip-name">Алтай: Шавлинские озёра</div>
+                    <div class="trip-date">АВГ 03</div>
+                </div>
+
+                <div class="trip-description">
+                    Динамичный маршрут с длинными переходами и минимальными остановками
+                </div>
+            </div>
+
+            <div class="trip-footer">
+                <div>СОВПАДЕНИЕ ПО ВАЙБУ</div>
+                <div class="match">72%</div>
+            </div>
+        </div>
+
+        <!-- Карточка 3 -->
+        <div class="trip-card">
+            <img src="/images/trip3.jpg" class="trip-image" />
+
+            <div class="trip-content">
+                <div class="trip-header">
+                    <div class="trip-name">Кавказ: Архыз</div>
+                    <div class="trip-date">СЕН 18</div>
+                </div>
+
+                <div class="trip-description">
+                    Баланс нагрузки и отдыха, с вечерними разговорами у костра
+                </div>
+            </div>
+
+            <div class="trip-footer">
+                <div>СОВПАДЕНИЕ ПО ВАЙБУ</div>
+                <div class="match">91%</div>
+            </div>
+        </div>
+
+        <!-- Вторая строка -->
+        <div class="trip-card">
+            <img src="/images/trip4.jpg" class="trip-image" />
+
+            <div class="trip-content">
+                <div class="trip-header">
+                    <div class="trip-name">Карелия: лесные маршруты</div>
+                    <div class="trip-date">ИЮН 25</div>
+                </div>
+
+                <div class="trip-description">
+                    Лёгкий поход с упором на отдых, природу и минимальный стресс
+                </div>
+            </div>
+
+            <div class="trip-footer">
+                <div>СОВПАДЕНИЕ ПО ВАЙБУ</div>
+                <div class="match">65%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="cta-section">
+    <div class="cta-content">
+        <div class="cta-line"></div>
+
+        <h2 class="cta-title">
+            ГОТОВ НАЙТИ СВОЮ ПОХОДНУЮ КОМАНДУ?
+        </h2>
+
+        <button class="cta-button">
+            Присоединиться
+        </button>
+
+        <div class="cta-line"></div>
+    </div>
+</div>
+
 @code {
-    private System.Timers.Timer? timer;
-    private string status = "загрузка...";
 
-    protected override async Task OnInitializedAsync()
-    {
-        await GetStatus(); // первый запрос сразу
-
-        timer = new System.Timers.Timer(60000); // 60 секунд
-        timer.Elapsed += async (_, __) => await GetStatus();
-        timer.AutoReset = true;
-        timer.Enabled = true;
-    }
-
-    private async Task GetStatus()
-    {
-        try
-        {
-            var response = await Http.GetAsync("test");
-
-            if (response.IsSuccessStatusCode)
-                status = "всё в порядке";
-            else
-                status = "что-то пошло не так";
-        }
-        catch
-        {
-            status = "сервер недоступен";
-        }
-
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private void Dispose()
-    {
-        timer?.Dispose();
-    }
 }
