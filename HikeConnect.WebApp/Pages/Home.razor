@@ -1,5 +1,7 @@
 @page "/"
 
+@inject NavigationManager Navigation
+
 <PageTitle>Главная - HikeConnect</PageTitle>
 
 <div class="hero">
@@ -12,7 +14,7 @@
         с которыми совпадают энергия общения и подход к маршруту
     </p>
 
-    <button class="hero-button">
+    <button class="hero-button" @onclick="GoToLogin">
         Найти свою группу
     </button>
 </div>
@@ -83,7 +85,7 @@
             ГОТОВ НАЙТИ СВОЮ ПОХОДНУЮ КОМАНДУ?
         </h2>
 
-        <button class="cta-button">
+        <button class="cta-button" @onclick="GoToLogin">
             Присоединиться
         </button>
 
@@ -106,4 +108,9 @@
         string DateLabel,
         string Description,
         int MatchPercent);
+
+    void GoToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
 }
