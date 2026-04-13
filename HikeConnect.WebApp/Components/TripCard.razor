@@ -1,0 +1,36 @@
+<div class="trip-card">
+    <img src="@ImageUrl" class="trip-image" alt="@Name" />
+
+    <div class="trip-content">
+        <div class="trip-header">
+            <div class="trip-name">@Name</div>
+            <div class="trip-date">@DateLabel</div>
+        </div>
+
+        <div class="trip-description">
+            @Description
+        </div>
+    </div>
+
+    <div class="trip-footer">
+        <div>СОВПАДЕНИЕ ПО ВАЙБУ</div>
+        <div class="match">@($"{MatchPercent}%")</div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string ImageUrl { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Name { get; set; } = string.Empty;
+
+    [Parameter]
+    public string DateLabel { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Description { get; set; } = string.Empty;
+
+    [Parameter]
+    public int MatchPercent { get; set; }
+}
