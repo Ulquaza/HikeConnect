@@ -1,11 +1,19 @@
 ﻿using HikeConnect.Core.Dtos;
 using HikeConnect.Core.Entities;
 using HikeConnect.Core.Interfaces;
+using Microsoft.AspNetCore.Identity;
 
 namespace HikeConnect.Application.Services
 {
     public class AuthService : IAuthService
     {
+        private readonly UserManager<User> _userManager;
+
+        public AuthService(UserManager<User> userManager)
+        {
+            _userManager = userManager;
+        }
+
         public Task<User?> GetUserByIdAsync(string id)
         {
             throw new NotImplementedException();
