@@ -14,7 +14,6 @@
         public Guid TripId { get; set; }
         public Guid UserId { get; set; }
         public ParticipationRequestStatus Status { get; set; }
-        public int CompatibilityPercentage { get; set; }
         public DateTime AppliedAt { get; set; }
 
         public virtual Trip Trip { get; set; }
