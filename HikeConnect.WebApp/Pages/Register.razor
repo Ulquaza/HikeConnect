@@ -1,7 +1,72 @@
-﻿@page "/register"
+@page "/register"
+@using HikeConnect.Core.Dtos
+@using HikeConnect.Core.Entities
 
 <PageTitle>Регистрация - HikeConnect</PageTitle>
 
-@code {
+<div class="container">
+    <div class="card auth-card">
+        <div class="auth-content">
+            <h2>Регистрация</h2>
+            <p class="subtitle">Создай аккаунт и собери свою первую походную команду.</p>
 
+            <EditForm Model="@registerRequest" OnSubmit="@HandleRegisterSubmit" class="auth-form">
+                <div class="auth-field">
+                    <label for="fullName">Отображаемое имя</label>
+                    <InputText id="fullName" @bind-Value="registerRequest.FullName" class="auth-input" />
+                </div>
+
+                <div class="auth-field">
+                    <label for="username">Имя пользователя</label>
+                    <InputText id="username" @bind-Value="registerRequest.Username" class="auth-input" />
+                </div>
+
+                <div class="auth-field">
+                    <label for="email">Email</label>
+                    <InputText id="email" @bind-Value="registerRequest.Email" class="auth-input" />
+                </div>
+
+                <div class="auth-field">
+                    <label for="password">Пароль</label>
+                    <InputText id="password" @bind-Value="registerRequest.Password" type="password" class="auth-input" />
+                </div>
+
+                <button type="submit" class="auth-button">Создать аккаунт</button>
+            </EditForm>
+
+            @if (createdUser is not null)
+            {
+                <p class="auth-status">
+                    Профиль готов: @createdUser.UserName (@createdUser.Email)
+                </p>
+            }
+
+            <div class="auth-links">
+                <NavLink href="/login">Уже есть аккаунт? Войти</NavLink>
+                <NavLink href="/">На главную</NavLink>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private readonly RegisterRequest registerRequest = new()
+    {
+        FullName = string.Empty,
+        Username = string.Empty,
+        Email = string.Empty,
+        Password = string.Empty
+    };
+    private User? createdUser;
+
+    private void HandleRegisterSubmit()
+    {
+        createdUser = new User
+        {
+            UserName = registerRequest.Username,
+            Email = registerRequest.Email,
+            FullName = registerRequest.FullName,
+            RegisteredAt = DateTime.UtcNow
+        };
+    }
 }
