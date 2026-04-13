@@ -1,6 +1,4 @@
 @page "/register"
-@using HikeConnect.Core.Dtos
-@using HikeConnect.Core.Entities
 
 <PageTitle>Регистрация - HikeConnect</PageTitle>
 
@@ -8,7 +6,6 @@
     <div class="card auth-card">
         <div class="auth-content">
             <h2>Регистрация</h2>
-            <p class="subtitle">Создай аккаунт и собери свою первую походную команду.</p>
 
             <EditForm Model="@registerRequest" OnSubmit="@HandleRegisterSubmit" class="auth-form">
                 <div class="auth-field">
