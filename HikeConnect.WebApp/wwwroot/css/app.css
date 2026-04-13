@@ -510,6 +510,44 @@ a:visited {
     gap: 50px;
 }
 
+.trips-page {
+    padding: 0 10rem 80px 10rem;
+}
+
+.trips-layout {
+    display: grid;
+    grid-template-columns: 295px 1fr;
+    gap: 40px;
+    align-items: start;
+}
+
+.trips-filters {
+    background: #292523;
+    border-radius: 14px;
+    padding: 22px 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    position: sticky;
+    top: 138px;
+}
+
+    .trips-filters h2 {
+        margin-top: 0;
+        margin-bottom: 16px;
+        font-size: 24px;
+    }
+
+.filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.trips-results .trips-title {
+    margin-top: 0;
+}
+
 /* Карточка */
 .trip-card {
     background: #3b3330;
