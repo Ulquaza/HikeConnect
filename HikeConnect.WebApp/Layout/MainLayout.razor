@@ -1,3 +1,21 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<div class="layout">
+    <header tabindex="-1" class="header">
+        <div class="header-container">
+            <NavLink class="logo" href>HikeConnect</NavLink>
+
+            <nav class="nav">
+                <NavLink href="/about">О проекте</NavLink>
+                <NavLink href="/contacts">Контакты</NavLink>
+                <NavLink href="/#">Создать поход</NavLink>  @* добавить if *@
+                <NavLink href="/#">Мои походы</NavLink>  @* добавить if *@
+                <NavLink href="/login">Войти</NavLink>  @* добавить if *@
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        @Body
+    </main>
+</div>
