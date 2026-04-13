@@ -1,0 +1,56 @@
+@page "/login"
+
+<PageTitle>Вход - HikeConnect</PageTitle>
+
+<div class="container">
+    <div class="card auth-card">
+        <div class="auth-content">
+            <h2>Вход</h2>
+
+            <EditForm Model="@loginRequest" OnSubmit="@HandleLoginSubmit" class="auth-form">
+                <div class="auth-field">
+                    <label for="emailOrUsername">Email или логин</label>
+                    <InputText id="emailOrUsername" @bind-Value="loginRequest.EmailOrUsername" class="auth-input" />
+                </div>
+
+                <div class="auth-field">
+                    <label for="password">Пароль</label>
+                    <InputText id="password" @bind-Value="loginRequest.Password" type="password" class="auth-input" />
+                </div>
+
+                <button type="submit" class="auth-button">Войти</button>
+            </EditForm>
+
+            @if (!string.IsNullOrWhiteSpace(statusMessage))
+            {
+                <p class="auth-status">@statusMessage</p>
+            }
+
+            <div class="auth-links">
+                <NavLink href="/register">Нет аккаунта? Зарегистрироваться</NavLink>
+                <NavLink href="/">На главную</NavLink>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private readonly LoginRequest loginRequest = new()
+    {
+        EmailOrUsername = string.Empty,
+        Password = string.Empty
+    };
+    private User? currentUser;
+    private string statusMessage = string.Empty;
+
+    private void HandleLoginSubmit()
+    {
+        currentUser = new User
+        {
+            UserName = loginRequest.EmailOrUsername,
+            Email = loginRequest.EmailOrUsername.Contains('@') ? loginRequest.EmailOrUsername : null
+        };
+
+        statusMessage = $"Пробуем вход для: {currentUser.UserName}";
+    }
+}

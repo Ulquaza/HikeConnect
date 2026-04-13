@@ -1,67 +1,116 @@
-﻿@page "/"
+@page "/"
 
-@inject HttpClient Http
+@inject NavigationManager Navigation
 
-<PageTitle>Home - HikeConnect</PageTitle>
+<PageTitle>Главная - HikeConnect</PageTitle>
 
-<div class="container">
-    <div class="card">
-        <h1>Добро пожаловать в HikeConnect</h1>
+<div class="hero">
+    <h1 class="hero-title">
+        Найди свою походную группу по <span class="accent">вайбу</span>, а не только по темпу
+    </h1>
 
-        <p class="subtitle">
-            Проект находится в разработке.
-        </p>
+    <p class="hero-subtitle">
+        Мы используем поведенческую психологию, чтобы подбирать тебе напарников по походам,
+        с которыми совпадают энергия общения и подход к маршруту
+    </p>
 
-        <p class="status">
-            Статус сервера: <span>@status</span>
-        </p>
+    <button class="hero-button" @onclick="GoToLogin">
+        Найти свою группу
+    </button>
+</div>
 
-        <p class="time">
-            @DateTime.Now.ToString("dd.MM.yyyy HH:mm")
-        </p>
+<div class="style-section">
+    <h2 class="style-title">КАКОЙ У ТЕБЯ СТИЛЬ ПОХОДОВ?</h2>
 
-        <div class="links">
-            <a href="/about">О проекте</a>
-            <a href="/contacts">Контакты</a>
+    <div class="style-cards">
+        <div class="style-card">
+            <img src="/images/silent.png" alt="Silent" class="style-icon" />
+            <div class="style-text">ТИХИЙ</div>
+        </div>
+
+        <div class="style-card">
+            <img src="/images/social.png" alt="Social" class="style-icon" />
+            <div class="style-text">ОБЩИТЕЛЬНЫЙ</div>
+        </div>
+
+        <div class="style-card">
+            <img src="/images/sporty.png" alt="Sporty" class="style-icon" />
+            <div class="style-text">СПОРТИВНЫЙ</div>
         </div>
     </div>
 </div>
 
+<div class="how-section">
+    <div class="how-steps">
+        <div class="how-step">
+            <div class="step-number">1</div>
+            <h3>Создай профиль походника</h3>
+            <p>Расскажи о своём опыте, стиле походов и ожиданиях от команды</p>
+        </div>
+
+        <div class="how-step">
+            <div class="step-number">2</div>
+            <h3>Пройди поведенческий опрос</h3>
+            <p>Мы определим твой стиль принятия решений, отношение к риску и взаимодействию в группе</p>
+        </div>
+
+        <div class="how-step">
+            <div class="step-number">3</div>
+            <h3>Найди совместимых напарников</h3>
+            <p>Сервис покажет людей, с которыми у тебя совпадают темп, подход и «вайб»</p>
+        </div>
+    </div>
+</div>
+
+<div class="trips-section">
+    <h2 class="trips-title">Предстоящие походы</h2>
+
+    <div class="trips-grid">
+        @foreach (var trip in trips)
+        {
+            <TripCard ImageUrl="@trip.ImageUrl"
+                      Name="@trip.Name"
+                      DateLabel="@trip.DateLabel"
+                      Description="@trip.Description"
+                      MatchPercent="@trip.MatchPercent" />
+        }
+    </div>
+</div>
+
+<div class="cta-section">
+    <div class="cta-content">
+        <div class="cta-line"></div>
+
+        <h2 class="cta-title">
+            ГОТОВ НАЙТИ СВОЮ ПОХОДНУЮ КОМАНДУ?
+        </h2>
+
+        <button class="cta-button" @onclick="GoToLogin">
+            Присоединиться
+        </button>
+
+        <div class="cta-line"></div>
+    </div>
+</div>
+
 @code {
-    private System.Timers.Timer? timer;
-    private string status = "загрузка...";
+    private readonly List<TripCardItem> trips =
+    [
+        new("/images/trip1.webp", "Ергаки: озеро Художников", "ИЮЛ 12", "Неспешный поход с упором на природу, фото и спокойную атмосферу", 87),
+        new("/images/trip2.jpg", "Алтай: Шавлинские озёра", "АВГ 03", "Динамичный маршрут с длинными переходами и минимальными остановками", 72),
+        new("/images/trip3.jpg", "Кавказ: Архыз", "СЕН 18", "Баланс нагрузки и отдыха, с вечерними разговорами у костра", 91),
+        new("/images/trip4.jpg", "Карелия: лесные маршруты", "ИЮН 25", "Лёгкий поход с упором на отдых, природу и минимальный стресс", 65)
+    ];
 
-    protected override async Task OnInitializedAsync()
+    private sealed record TripCardItem(
+        string ImageUrl,
+        string Name,
+        string DateLabel,
+        string Description,
+        int MatchPercent);
+
+    void GoToLogin()
     {
-        await GetStatus(); // первый запрос сразу
-
-        timer = new System.Timers.Timer(60000); // 60 секунд
-        timer.Elapsed += async (_, __) => await GetStatus();
-        timer.AutoReset = true;
-        timer.Enabled = true;
-    }
-
-    private async Task GetStatus()
-    {
-        try
-        {
-            var response = await Http.GetAsync("test");
-
-            if (response.IsSuccessStatusCode)
-                status = "всё в порядке";
-            else
-                status = "что-то пошло не так";
-        }
-        catch
-        {
-            status = "сервер недоступен";
-        }
-
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private void Dispose()
-    {
-        timer?.Dispose();
+        Navigation.NavigateTo("/login");
     }
 }

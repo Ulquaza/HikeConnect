@@ -1,0 +1,56 @@
+@page "/trips"
+
+<PageTitle>Походы - HikeConnect</PageTitle>
+
+<div class="trips-page">
+    <div class="trips-layout">
+        <aside class="trips-filters">
+            <h2>Фильтры</h2>
+
+            <label class="filter-checkbox">
+                <InputCheckbox @bind-Value="onlyHighCompatibility" />
+                <span>Совместимость >80%</span>
+            </label>
+        </aside>
+
+        <section class="trips-results">
+            <h2 class="trips-title">Предстоящие походы</h2>
+
+            <div class="trips-grid">
+                @foreach (var trip in FilteredTrips)
+                {
+                    <TripCard ImageUrl="@trip.ImageUrl"
+                              Name="@trip.Name"
+                              DateLabel="@trip.DateLabel"
+                              Description="@trip.Description"
+                              MatchPercent="@trip.MatchPercent" />
+                }
+            </div>
+        </section>
+    </div>
+</div>
+
+
+@code {
+    private bool onlyHighCompatibility;
+
+    private readonly List<TripCardItem> trips =
+    [
+        new("/images/trip1.webp", "Ергаки: озеро Художников", "ИЮЛ 12", "Неспешный поход с упором на природу, фото и спокойную атмосферу", 87),
+        new("/images/trip2.jpg", "Алтай: Шавлинские озёра", "АВГ 03", "Динамичный маршрут с длинными переходами и минимальными остановками", 72),
+        new("/images/trip3.jpg", "Кавказ: Архыз", "СЕН 18", "Баланс нагрузки и отдыха, с вечерними разговорами у костра", 91),
+        new("/images/trip4.jpg", "Карелия: лесные маршруты", "ИЮН 25", "Лёгкий поход с упором на отдых, природу и минимальный стресс", 65)
+    ];
+
+    private IEnumerable<TripCardItem> FilteredTrips =>
+        onlyHighCompatibility
+            ? trips.Where(trip => trip.MatchPercent > 80)
+            : trips;
+
+    private sealed record TripCardItem(
+        string ImageUrl,
+        string Name,
+        string DateLabel,
+        string Description,
+        int MatchPercent);
+}

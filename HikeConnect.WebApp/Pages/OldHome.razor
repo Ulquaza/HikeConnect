@@ -1,0 +1,67 @@
+﻿@page "/oldhome"
+
+@inject HttpClient Http
+
+<PageTitle>Home - HikeConnect</PageTitle>
+
+<div class="container">
+    <div class="card">
+        <h1>Добро пожаловать в HikeConnect</h1>
+
+        <p class="subtitle">
+            Проект находится в разработке.
+        </p>
+
+        <p class="status">
+            Статус сервера: <span>@status</span>
+        </p>
+
+        <p class="time">
+            @DateTime.Now.ToString("dd.MM.yyyy HH:mm")
+        </p>
+
+        <div class="links">
+            <a href="/about">О проекте</a>
+            <a href="/contacts">Контакты</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private System.Timers.Timer? timer;
+    private string status = "загрузка...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetStatus(); // первый запрос сразу
+
+        timer = new System.Timers.Timer(60000); // 60 секунд
+        timer.Elapsed += async (_, __) => await GetStatus();
+        timer.AutoReset = true;
+        timer.Enabled = true;
+    }
+
+    private async Task GetStatus()
+    {
+        try
+        {
+            var response = await Http.GetAsync("test");
+
+            if (response.IsSuccessStatusCode)
+                status = "всё в порядке";
+            else
+                status = "что-то пошло не так";
+        }
+        catch
+        {
+            status = "сервер недоступен";
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void Dispose()
+    {
+        timer?.Dispose();
+    }
+}

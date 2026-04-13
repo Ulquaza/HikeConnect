@@ -16,4 +16,8 @@
     <Folder Include="wwwroot\images\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\HikeConnect.Core\HikeConnect.Core.csproj" />
+  </ItemGroup>
+
 </Project>
