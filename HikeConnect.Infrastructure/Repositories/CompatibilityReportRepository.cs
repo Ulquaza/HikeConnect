@@ -35,14 +35,14 @@ namespace HikeConnect.Infrastructure.Repositories
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<CompatibilityReport>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<CompatibilityReport>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             return await _context.CompatibilityReports
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<CompatibilityReport>> GetByAuthorIdAsync(Guid authorId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<CompatibilityReport>> GetByAuthorIdAsync(Guid authorId, CancellationToken cancellationToken = default)
         {
             return await _context.CompatibilityReports
                 .AsNoTracking()
