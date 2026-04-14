@@ -1,4 +1,5 @@
-﻿using HikeConnect.Core.Dtos;
+﻿using HikeConnect.Api.Extensions;
+using HikeConnect.Core.Dtos;
 using HikeConnect.Core.Entities;
 using HikeConnect.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -19,10 +20,13 @@ namespace HikeConnect.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(
-            [FromBody] BehavioralSurveySubmissionRequest request,
-            CancellationToken cancellationToken)
+        public async Task<IActionResult> Create([FromBody] BehavioralSurveySubmissionRequest request, CancellationToken cancellationToken)
         {
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
             var profile = await _behavioralProfileService.CreateAsync(request, cancellationToken);
             return profile is null
                 ? BadRequest()
@@ -57,6 +61,11 @@ namespace HikeConnect.Api.Controllers
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] BehavioralProfile profile, CancellationToken cancellationToken)
         {
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
             var updatedProfile = await _behavioralProfileService.UpdateAsync(profile, cancellationToken);
             return updatedProfile is null
                 ? NotFound()
@@ -66,6 +75,11 @@ namespace HikeConnect.Api.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
         {
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
             await _behavioralProfileService.DeleteAsync(id, cancellationToken);
             return Ok();
         }

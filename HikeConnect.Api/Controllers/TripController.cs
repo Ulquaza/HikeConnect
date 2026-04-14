@@ -1,4 +1,5 @@
-﻿using HikeConnect.Core.Entities;
+﻿using HikeConnect.Api.Extensions;
+using HikeConnect.Core.Entities;
 using HikeConnect.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,6 +37,11 @@ namespace HikeConnect.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Trip trip, CancellationToken ct)
         {
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
             var createdTrip = await _tripService.CreateAsync(trip, ct);
             return createdTrip is null
                 ? BadRequest()
@@ -46,6 +52,11 @@ namespace HikeConnect.Api.Controllers
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] Trip trip, CancellationToken ct)
         {
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
             var updatedTrip = await _tripService.UpdateAsync(trip, ct);
             return updatedTrip is null
                 ? NotFound()
@@ -56,6 +67,11 @@ namespace HikeConnect.Api.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
         {
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
             await _tripService.DeleteAsync(id, ct);
             return Ok();
         }
@@ -64,6 +80,11 @@ namespace HikeConnect.Api.Controllers
         [HttpPatch("{id:guid}/publish")]
         public async Task<IActionResult> Publish(Guid id, CancellationToken ct)
         {
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
             var trip = await _tripService.PublishAsync(id, ct);
             return trip is null
                 ? NotFound()
@@ -74,6 +95,11 @@ namespace HikeConnect.Api.Controllers
         [HttpPatch("{id:guid}/unpublish")]
         public async Task<IActionResult> Unpublish(Guid id, CancellationToken ct)
         {
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
             var trip = await _tripService.UnpublishAsync(id, ct);
             return trip is null
                 ? NotFound()
