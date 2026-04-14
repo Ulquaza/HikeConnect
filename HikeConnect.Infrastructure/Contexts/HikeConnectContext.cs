@@ -13,10 +13,8 @@ namespace HikeConnect.Infrastructure.Contexts
         public DbSet<ParticipationRequest> ParticipationRequests { get; set; }
         public DbSet<Trip> Trips { get; set; }
 
-        public HikeConnectContext(DbContextOptions options) : base(options)
+        public HikeConnectContext(DbContextOptions<HikeConnectContext> options) : base(options)
         {
-            Database.CanConnect();
-            Database.Migrate();
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
