@@ -10,6 +10,10 @@ namespace HikeConnect.Infrastructure.Configurations.EntityFramework
         {
             builder.HasKey(e => e.Id);
 
+            builder.Property(e => e.Name)
+                .HasMaxLength(256)
+                .IsRequired(true);
+
             builder.Property(e => e.Description)
                 .HasMaxLength(2048)
                 .IsRequired(true);
