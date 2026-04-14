@@ -13,9 +13,10 @@
                 <NavLink href="/about">О проекте</NavLink>
                 <NavLink href="/contacts">Контакты</NavLink>
                 <NavLink href="/trips">Походы</NavLink>
+                <NavLink href="/create">Организовать</NavLink>
                 @if (Auth.IsLoggedIn)
                 {
-                    <NavLink href="/user/@(Auth.UserName)">Профиль</NavLink>
+                    <NavLink href="@("/user/{Auth.UserName}")">Профиль</NavLink>
                     <button class="link-button" @onclick="LogoutAsync">Выйти</button>
                 }
                 else
@@ -35,9 +36,8 @@
 @code {
     private async Task LogoutAsync()
     {
-        var response = await Http.PostAsync(ApiRoutes.Auth.Logout);
-        var resp = await Http.GetAsync(ApiRoutes.Auth.Logout);
-        if (resp.IsSuccessStatusCode)
+        var response = await Http.GetAsync(ApiRoutes.Auth.Logout);
+        if (response.IsSuccessStatusCode)
         {
             Auth.Logout();
             Nav.NavigateTo("/");
