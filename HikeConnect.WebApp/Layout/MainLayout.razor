@@ -16,7 +16,7 @@
                 <NavLink href="/create">Организовать</NavLink>
                 @if (Auth.IsLoggedIn)
                 {
-                    <NavLink href="@("/user/{Auth.UserName}")">Профиль</NavLink>
+                    <NavLink href="@($"/user/{Auth.UserName}")">Профиль</NavLink>
                     <button class="link-button" @onclick="LogoutAsync">Выйти</button>
                 }
                 else
