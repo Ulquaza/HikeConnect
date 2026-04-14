@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HikeConnect.Infrastructure.Contexts
 {
-    internal class HikeConnectContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
+    public class HikeConnectContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     {
         public DbSet<BehavioralProfile> BehavioralProfiles { get; set; }
         public DbSet<CompatibilityReport> CompatibilityReports { get; set; }
