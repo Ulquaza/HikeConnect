@@ -1297,6 +1297,42 @@ a:visited {
     margin-top: 14px;
 }
 
+.user-profile-survey-results {
+    margin-top: 20px;
+}
+
+.user-profile-survey-results h2 {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.user-profile-survey-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px;
+    margin-bottom: 16px;
+}
+
+.user-profile-survey-grid div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #3b3330;
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.user-profile-survey-grid span {
+    color: #b9b9b9;
+    font-size: 13px;
+}
+
+@media (max-width: 900px) {
+    .user-profile-survey-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 900px) {
     .user-profile-head {
         flex-direction: column;
