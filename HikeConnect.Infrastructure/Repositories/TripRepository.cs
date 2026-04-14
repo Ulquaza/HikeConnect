@@ -34,7 +34,7 @@ namespace HikeConnect.Infrastructure.Repositories
             await _context.SaveChangesAsync(ct);
         }
 
-        public async Task<IEnumerable<Trip>> GetAllAsync(CancellationToken ct = default)
+        public async Task<IReadOnlyList<Trip>> GetAllAsync(CancellationToken ct = default)
         {
             return await _context.Trips
                 .Include(x => x.ParticipationRequests)
@@ -46,6 +46,14 @@ namespace HikeConnect.Infrastructure.Repositories
             return await _context.Trips
                 .Include(x => x.ParticipationRequests)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
+        }
+
+        public async Task<IReadOnlyList<Trip>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
+        {
+            return await _context.Trips
+                .Where(x => x.AuthorId == userId)
+                .Include(x => x.ParticipationRequests)
+                .ToListAsync(ct);
         }
 
         public async Task<Trip?> UpdateAsync(Trip trip, CancellationToken ct = default)
