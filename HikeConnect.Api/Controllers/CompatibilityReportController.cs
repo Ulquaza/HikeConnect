@@ -17,7 +17,7 @@ namespace HikeConnect.Api.Controllers
             _compatibilityReportService = compatibilityReportService;
         }
 
-        [HttpPost("{targetId:guid")]
+        [HttpPost("{targetId:guid}")]
         public async Task<IActionResult> Create(Guid targetId, CancellationToken cancellationToken)
         {
             if (!User.TryGetUserId(out var authorId))

@@ -42,12 +42,6 @@ namespace HikeConnect.Api.Controllers
                 return Unauthorized();
             }
 
-            var createdTrip = await _tripService.CreateAsync(trip, ct);
-            if (!User.TryGetUserId(out var authorId))
-            {
-                return Unauthorized();
-            }
-
             var createdTrip = await _tripService.CreateAsync(trip, authorId, ct);
             return createdTrip is null
                 ? BadRequest()
@@ -58,12 +52,6 @@ namespace HikeConnect.Api.Controllers
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] Trip trip, CancellationToken ct)
         {
-            if (!User.TryGetUserId(out var authorId))
-            {
-                return Unauthorized();
-            }
-
-            var updatedTrip = await _tripService.UpdateAsync(trip, ct);
             if (!User.TryGetUserId(out var authorId))
             {
                 return Unauthorized();
@@ -84,12 +72,6 @@ namespace HikeConnect.Api.Controllers
                 return Unauthorized();
             }
 
-            await _tripService.DeleteAsync(id, ct);
-            if (!User.TryGetUserId(out var authorId))
-            {
-                return Unauthorized();
-            }
-
             await _tripService.DeleteAsync(id, authorId, ct);
             return Ok();
         }
@@ -98,12 +80,6 @@ namespace HikeConnect.Api.Controllers
         [HttpPatch("{id:guid}/publish")]
         public async Task<IActionResult> Publish(Guid id, CancellationToken ct)
         {
-            if (!User.TryGetUserId(out var authorId))
-            {
-                return Unauthorized();
-            }
-
-            var trip = await _tripService.PublishAsync(id, ct);
             if (!User.TryGetUserId(out var authorId))
             {
                 return Unauthorized();
@@ -119,12 +95,6 @@ namespace HikeConnect.Api.Controllers
         [HttpPatch("{id:guid}/unpublish")]
         public async Task<IActionResult> Unpublish(Guid id, CancellationToken ct)
         {
-            if (!User.TryGetUserId(out var authorId))
-            {
-                return Unauthorized();
-            }
-
-            var trip = await _tripService.UnpublishAsync(id, ct);
             if (!User.TryGetUserId(out var authorId))
             {
                 return Unauthorized();
