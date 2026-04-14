@@ -103,7 +103,9 @@ else
                     @foreach (var participant in _approvedParticipants)
                     {
                         <div class="view-trip-user">
-                            <div class="view-trip-avatar-placeholder"></div>
+                            <img src="/images/default_avatar.webp"
+                                 class="view-trip-avatar-image"
+                                 alt="@($"Аватар пользователя {participant.DisplayName}")" />
                             <div class="view-trip-user-name">@participant.DisplayName</div>
                         </div>
                     }
@@ -129,7 +131,9 @@ else
                                     disabled="@_processingRequestIds.Contains(participant.RequestId)"
                                     title="Нажми, чтобы принять заявку"
                                     @onclick="() => ApproveRequestAsync(participant.RequestId)">
-                                <div class="view-trip-avatar-placeholder"></div>
+                                <img src="/images/default_avatar.webp"
+                                     class="view-trip-avatar-image"
+                                     alt="@($"Аватар пользователя {participant.DisplayName}")" />
                                 <div class="view-trip-user-name">@participant.DisplayName</div>
                             </button>
                         }

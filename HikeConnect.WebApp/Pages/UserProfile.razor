@@ -26,7 +26,9 @@ else
         <section class="card user-profile-card">
             <div class="user-profile-head">
                 <div class="user-profile-left">
-                    <div class="user-profile-avatar-placeholder"></div>
+                    <img src="/images/default_avatar.webp"
+                         class="user-profile-avatar-image"
+                         alt="@($"Аватар пользователя {_user.FullName}")" />
                     <div class="user-profile-main">
                         <h1>@_user.FullName</h1>
                         <p>Активен с @_user.RegisteredAt.ToString("dd.MM.yyyy")</p>
