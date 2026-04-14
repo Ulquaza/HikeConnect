@@ -1,0 +1,246 @@
+﻿@page "/survey"
+
+@* @attribute [Authorize] *@
+
+@inject JwtAuthStateProvider Auth
+@inject NavigationManager Nav
+@inject HttpClient Http
+
+<PageTitle>Поведенческий опрос - HikeConnect</PageTitle>
+
+<div class="survey-page">
+    <div class="survey-header">
+        <h1 class="survey-title">Подбор напарников начинается с тебя</h1>
+        <p class="survey-subtitle">Ответь на несколько вопросов, чтобы мы подобрали тебе совместимых напарников для походов</p>
+    </div>
+
+    @if (_isSubmitted)
+    {
+        <section class="survey-card survey-result">
+            <h2>Опрос завершен</h2>
+            <p>Спасибо! Твой профиль сохранен и готов для подбора совместимых напарников.</p>
+            <button type="button" class="survey-button survey-button-primary" @onclick="GoToHome">
+                На главную
+            </button>
+        </section>
+    }
+    else
+    {
+        var question = _questions[_currentQuestionIndex];
+        var selectedOptionCode = GetSelectedOptionCode(question.QuestionCode);
+
+        <section class="survey-card">
+            <div class="survey-progress">Вопрос @(_currentQuestionIndex + 1) из @_questions.Count</div>
+
+            <h2 class="survey-question-text">@question.Text</h2>
+
+            <div class="survey-options">
+                @foreach (var option in question.Options)
+                {
+                    var optionId = $"{question.QuestionCode}-{option.OptionCode}";
+                    <label class="survey-option" for="@optionId">
+                        <input id="@optionId"
+                               type="radio"
+                               name="@question.QuestionCode"
+                               checked="@(selectedOptionCode == option.OptionCode)"
+                               @onchange="() => SelectAnswer(question.QuestionCode, option.OptionCode)" />
+                        <span class="survey-option-text">@option.Text</span>
+                    </label>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_statusMessage))
+            {
+                <p class="survey-status">@_statusMessage</p>
+            }
+
+            <div class="survey-actions">
+                <button type="button"
+                        class="survey-button survey-button-secondary"
+                        disabled="@(_currentQuestionIndex == 0 || _isSubmitting)"
+                        @onclick="GoToPreviousQuestion">
+                    Назад
+                </button>
+
+                @if (_currentQuestionIndex < _questions.Count - 1)
+                {
+                    <button type="button"
+                            class="survey-button survey-button-primary"
+                            disabled="@(string.IsNullOrWhiteSpace(selectedOptionCode) || _isSubmitting)"
+                            @onclick="GoToNextQuestion">
+                        Следующий вопрос
+                    </button>
+                }
+                else
+                {
+                    <button type="button"
+                            class="survey-button survey-button-primary"
+                            disabled="@(string.IsNullOrWhiteSpace(selectedOptionCode) || _isSubmitting)"
+                            @onclick="SubmitSurveyAsync">
+                        @(_isSubmitting ? "Отправка..." : "Завершить")
+                    </button>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    private readonly List<SurveyQuestion> _questions =
+    [
+        new(
+            "movement_format",
+            "Какой формат движения в походе тебе ближе?",
+            [
+                new("Идти в комфортном темпе, часто отдыхать, наслаждаться природой", "pace_comfort"),
+                new("Держать умеренный темп: и идти стабильно, и успевать отдыхать", "pace_balanced"),
+                new("Идти быстро и эффективно, минимизируя остановки", "pace_sport")
+            ]),
+        new(
+            "conflict_route",
+            "В группе возник спор (например, по маршруту). Как ты обычно себя ведешь?",
+            [
+                new("Пытаюсь найти компромисс, чтобы всем было ок", "conflict_compromise"),
+                new("Говорю прямо, как считаю правильным, даже если это не всем нравится", "conflict_direct"),
+                new("Стараюсь не обострять и уступаю, чтобы не было конфликта", "conflict_avoid")
+            ]),
+        new(
+            "risk_attitude",
+            "Как ты относишься к рисковым ситуациям в походе?",
+            [
+                new("Предпочитаю максимально безопасные решения, даже если это дольше", "risk_low"),
+                new("Готов к умеренному риску, если он оправдан", "risk_medium"),
+                new("Готов рисковать ради скорости или результата", "risk_high")
+            ]),
+        new(
+            "agreements",
+            "Насколько строго ты соблюдаешь договоренности в походе?",
+            [
+                new("Иногда могу отклоняться, если не критично", "discipline_low"),
+                new("Стараюсь соблюдать договоренности, но без фанатизма", "discipline_medium"),
+                new("Четко следую плану и договоренностям", "discipline_high")
+            ]),
+        new(
+            "group_tired",
+            "Если часть группы устала и просит чаще отдыхать?",
+            [
+                new("Подстроюсь, важно чтобы всем было комфортно", "pace_comfort"),
+                new("Попробуем найти баланс", "pace_balanced"),
+                new("Лучше держать темп, иначе выбьемся из графика", "pace_sport")
+            ]),
+        new(
+            "forgot_gear",
+            "Кто-то забыл часть снаряжения. Твои мысли?",
+            [
+                new("Ничего страшного, выкрутимся", "discipline_low"),
+                new("Неприятно, но решаемо", "discipline_medium"),
+                new("Это серьезная проблема, так нельзя", "discipline_high")
+            ]),
+        new(
+            "group_tension",
+            "В группе накапливается напряжение и раздражение. Что ты делаешь?",
+            [
+                new("Пробую обсудить и разрядить ситуацию", "conflict_compromise"),
+                new("Говорю прямо, в чем проблема", "conflict_direct"),
+                new("Лучше переждать и не лезть", "conflict_avoid")
+            ]),
+        new(
+            "weather_bad",
+            "Погода ухудшается, но маршрут еще можно пройти. Твои действия?",
+            [
+                new("Лучше развернуться или выбрать безопасный вариант", "risk_low"),
+                new("Оценить ситуацию и принять взвешенное решение", "risk_medium"),
+                new("Идти дальше, если есть шанс пройти", "risk_high")
+            ]),
+        new(
+            "duties",
+            "Как ты относишься к распределению обязанностей (еда, лагерь и т.д.)?",
+            [
+                new("Делаю по ситуации, без строгих ролей", "discipline_low"),
+                new("Готов брать ответственность, если договорились", "discipline_medium"),
+                new("Важно четкое распределение и выполнение обязанностей", "discipline_high")
+            ])
+    ];
+
+    private readonly Dictionary<string, string> _answersByQuestionCode = new(StringComparer.Ordinal);
+    private int _currentQuestionIndex;
+    private bool _isSubmitting;
+    private bool _isSubmitted;
+    private string _statusMessage = string.Empty;
+
+    private void SelectAnswer(string questionCode, string optionCode)
+    {
+        _answersByQuestionCode[questionCode] = optionCode;
+        _statusMessage = string.Empty;
+    }
+
+    private string GetSelectedOptionCode(string questionCode)
+    {
+        return _answersByQuestionCode.TryGetValue(questionCode, out var optionCode)
+            ? optionCode
+            : string.Empty;
+    }
+
+    private void GoToNextQuestion()
+    {
+        if (_currentQuestionIndex < _questions.Count - 1)
+        {
+            _currentQuestionIndex++;
+            _statusMessage = string.Empty;
+        }
+    }
+
+    private void GoToPreviousQuestion()
+    {
+        if (_currentQuestionIndex > 0)
+        {
+            _currentQuestionIndex--;
+            _statusMessage = string.Empty;
+        }
+    }
+
+    private async Task SubmitSurveyAsync()
+    {
+        if (_isSubmitting || _answersByQuestionCode.Count != _questions.Count)
+        {
+            return;
+        }
+
+        _isSubmitting = true;
+        _statusMessage = string.Empty;
+
+        var request = new BehavioralSurveySubmissionRequest
+        {
+            Answers = _questions
+                .Select(question => new BehavioralSurveyAnswerDto
+                {
+                    QuestionCode = question.QuestionCode,
+                    OptionCode = _answersByQuestionCode[question.QuestionCode]
+                })
+                .ToList()
+        };
+
+        var response = await Http.PostAsJsonAsync(ApiRoutes.BehavioralProfile.Base, request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            _isSubmitted = true;
+            _statusMessage = string.Empty;
+        }
+        else
+        {
+            _statusMessage = "Не удалось сохранить ответы. Попробуй еще раз.";
+        }
+
+        _isSubmitting = false;
+    }
+
+    private void GoToHome()
+    {
+        Nav.NavigateTo("/");
+    }
+
+    private sealed record SurveyQuestion(string QuestionCode, string Text, IReadOnlyList<SurveyOption> Options);
+    private sealed record SurveyOption(string Text, string OptionCode);
+
+}
