@@ -55,7 +55,7 @@
         if (response.IsSuccessStatusCode && content?.IsLoggedIn is true && content?.AccessToken is not null)
         {
             Auth.Login(content.AccessToken);
-            Nav.NavigateTo($"/users/{Auth.UserName}");
+            Nav.NavigateTo($"/user/{Auth.UserName}");
         }
         else
         {
