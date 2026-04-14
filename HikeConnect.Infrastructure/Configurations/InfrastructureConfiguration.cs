@@ -36,7 +36,7 @@ namespace HikeConnect.Infrastructure.Configurations
                 options.User.RequireUniqueEmail = true;
                 options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._";
             })
-                .AddRoles<IdentityRole>()
+                .AddRoles<IdentityRole<Guid>>()
                 .AddEntityFrameworkStores<HikeConnectContext>()
                 .AddDefaultTokenProviders();
         }
