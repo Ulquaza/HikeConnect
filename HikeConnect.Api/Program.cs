@@ -2,6 +2,7 @@ using HikeConnect.Application.Configurations;
 using HikeConnect.Core.Settings;
 using HikeConnect.Infrastructure.Configurations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -67,6 +68,12 @@ namespace HikeConnect.Api
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<Infrastructure.Contexts.HikeConnectContext>();
+                db.Database.Migrate();
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
