@@ -36,23 +36,18 @@ namespace HikeConnect.Infrastructure.Repositories
 
         public async Task<IReadOnlyList<Trip>> GetAllAsync(CancellationToken ct = default)
         {
-            return await _context.Trips
-                .Include(x => x.ParticipationRequests)
-                .ToListAsync(ct);
+            return await _context.Trips.ToListAsync(ct);
         }
 
         public async Task<Trip?> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
-            return await _context.Trips
-                .Include(x => x.ParticipationRequests)
-                .FirstOrDefaultAsync(x => x.Id == id, ct);
+            return await _context.Trips.FirstOrDefaultAsync(x => x.Id == id, ct);
         }
 
         public async Task<IReadOnlyList<Trip>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
         {
             return await _context.Trips
                 .Where(x => x.AuthorId == userId)
-                .Include(x => x.ParticipationRequests)
                 .ToListAsync(ct);
         }
 
