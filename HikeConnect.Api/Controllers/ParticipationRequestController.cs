@@ -1,4 +1,5 @@
-﻿using HikeConnect.Core.Interfaces;
+﻿using HikeConnect.Api.Extensions;
+using HikeConnect.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,12 +17,14 @@ namespace HikeConnect.Api.Controllers
             _participationRequestService = participationRequestService;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create(
-            [FromQuery] Guid tripId,
-            [FromQuery] Guid userId,
-            CancellationToken ct)
+        [HttpPost("{tripId:guid}")]
+        public async Task<IActionResult> Create(Guid tripId, CancellationToken ct)
         {
+            if (!User.TryGetUserId(out var userId))
+            {
+                return Unauthorized();
+            }
+
             var request = await _participationRequestService.CreateAsync(tripId, userId, ct);
             return request is null
                 ? BadRequest()
@@ -61,6 +64,7 @@ namespace HikeConnect.Api.Controllers
                 : Ok(request);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{requestId:guid}")]
         public async Task<IActionResult> Delete(Guid requestId, CancellationToken ct)
         {
@@ -69,11 +73,13 @@ namespace HikeConnect.Api.Controllers
         }
 
         [HttpPatch("{requestId:guid}/approve")]
-        public async Task<IActionResult> Approve(
-            Guid requestId,
-            [FromQuery] Guid organizerId,
-            CancellationToken ct)
+        public async Task<IActionResult> Approve(Guid requestId, CancellationToken ct)
         {
+            if (!User.TryGetUserId(out var organizerId))
+            {
+                return Unauthorized();
+            }
+
             var request = await _participationRequestService.ApproveAsync(requestId, organizerId, ct);
             return request is null
                 ? BadRequest()
@@ -81,11 +87,13 @@ namespace HikeConnect.Api.Controllers
         }
 
         [HttpPatch("{requestId:guid}/reject")]
-        public async Task<IActionResult> Reject(
-            Guid requestId,
-            [FromQuery] Guid organizerId,
-            CancellationToken ct)
+        public async Task<IActionResult> Reject(Guid requestId, CancellationToken ct)
         {
+            if (!User.TryGetUserId(out var organizerId))
+            {
+                return Unauthorized();
+            }
+
             var request = await _participationRequestService.RejectAsync(requestId, organizerId, ct);
             return request is null
                 ? BadRequest()
@@ -93,11 +101,13 @@ namespace HikeConnect.Api.Controllers
         }
 
         [HttpPatch("{requestId:guid}/cancel")]
-        public async Task<IActionResult> Cancel(
-            Guid requestId,
-            [FromQuery] Guid userId,
-            CancellationToken ct)
+        public async Task<IActionResult> Cancel(Guid requestId, CancellationToken ct)
         {
+            if (!User.TryGetUserId(out var userId))
+            {
+                return Unauthorized();
+            }
+
             var request = await _participationRequestService.CancelAsync(requestId, userId, ct);
             return request is null
                 ? BadRequest()
