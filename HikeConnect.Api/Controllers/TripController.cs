@@ -37,6 +37,12 @@ namespace HikeConnect.Api.Controllers
         public async Task<IActionResult> Create([FromBody] Trip trip, CancellationToken ct)
         {
             var createdTrip = await _tripService.CreateAsync(trip, ct);
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
+            var createdTrip = await _tripService.CreateAsync(trip, authorId, ct);
             return createdTrip is null
                 ? BadRequest()
                 : Ok(createdTrip);
@@ -47,6 +53,12 @@ namespace HikeConnect.Api.Controllers
         public async Task<IActionResult> Update([FromBody] Trip trip, CancellationToken ct)
         {
             var updatedTrip = await _tripService.UpdateAsync(trip, ct);
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
+            var updatedTrip = await _tripService.UpdateAsync(trip, authorId, ct);
             return updatedTrip is null
                 ? NotFound()
                 : Ok(updatedTrip);
@@ -57,6 +69,12 @@ namespace HikeConnect.Api.Controllers
         public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
         {
             await _tripService.DeleteAsync(id, ct);
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
+            await _tripService.DeleteAsync(id, authorId, ct);
             return Ok();
         }
 
@@ -65,6 +83,12 @@ namespace HikeConnect.Api.Controllers
         public async Task<IActionResult> Publish(Guid id, CancellationToken ct)
         {
             var trip = await _tripService.PublishAsync(id, ct);
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
+            var trip = await _tripService.PublishAsync(id, authorId, ct);
             return trip is null
                 ? NotFound()
                 : Ok(trip);
@@ -75,6 +99,12 @@ namespace HikeConnect.Api.Controllers
         public async Task<IActionResult> Unpublish(Guid id, CancellationToken ct)
         {
             var trip = await _tripService.UnpublishAsync(id, ct);
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
+            var trip = await _tripService.UnpublishAsync(id, authorId, ct);
             return trip is null
                 ? NotFound()
                 : Ok(trip);

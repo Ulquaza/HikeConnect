@@ -24,11 +24,18 @@ namespace HikeConnect.Api.Controllers
             CancellationToken cancellationToken)
         {
             var profile = await _behavioralProfileService.CreateAsync(request, cancellationToken);
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
+            var profile = await _behavioralProfileService.CreateAsync(request, authorId, cancellationToken);
             return profile is null
                 ? BadRequest()
                 : Ok(profile);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {
@@ -58,11 +65,18 @@ namespace HikeConnect.Api.Controllers
         public async Task<IActionResult> Update([FromBody] BehavioralProfile profile, CancellationToken cancellationToken)
         {
             var updatedProfile = await _behavioralProfileService.UpdateAsync(profile, cancellationToken);
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
+            var updatedProfile = await _behavioralProfileService.UpdateAsync(profile, authorId, cancellationToken);
             return updatedProfile is null
                 ? NotFound()
                 : Ok(updatedProfile);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
         {

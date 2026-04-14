@@ -12,18 +12,22 @@ namespace HikeConnect.Application.Services
             _tripRepository = tripRepository;
         }
 
-        public async Task<Trip?> CreateAsync(Trip trip, CancellationToken ct = default)
+        public async Task<Trip?> CreateAsync(Trip trip, Guid userId, CancellationToken ct = default)
         {
             if (trip is null) return null;
 
+            trip.AuthorId = userId;
             trip.CreatedAt = trip.CreatedAt == default ? DateTime.UtcNow : trip.CreatedAt;
 
             return await _tripRepository.AddAsync(trip, ct);
         }
 
-        public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+        public async Task DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
         {
             if (id == Guid.Empty) return;
+
+            var trip = await _tripRepository.GetByIdAsync(id);
+            if (trip is null || trip.AuthorId != userId) return;
 
             await _tripRepository.DeleteAsync(id, ct);
         }
@@ -47,31 +51,31 @@ namespace HikeConnect.Application.Services
             return await _tripRepository.GetByUserIdAsync(userId, ct);
         }
 
-        public async Task<Trip?> PublishAsync(Guid tripId, CancellationToken ct = default)
+        public async Task<Trip?> PublishAsync(Guid tripId, Guid userId, CancellationToken ct = default)
         {
             if (tripId == Guid.Empty) return null;
 
             var trip = await _tripRepository.GetByIdAsync(tripId, ct);
-            if (trip is null) return null;
+            if (trip is null || trip.AuthorId != userId) return null;
 
             trip.Status = TripStatus.Ongoing;
             return await _tripRepository.UpdateAsync(trip, ct);
         }
 
-        public async Task<Trip?> UnpublishAsync(Guid tripId, CancellationToken ct = default)
+        public async Task<Trip?> UnpublishAsync(Guid tripId, Guid userId, CancellationToken ct = default)
         {
             if (tripId == Guid.Empty) return null;
 
             var trip = await _tripRepository.GetByIdAsync(tripId, ct);
-            if (trip is null) return null;
+            if (trip is null || trip.AuthorId != userId) return null;
 
             trip.Status = TripStatus.Planned;
             return await _tripRepository.UpdateAsync(trip, ct);
         }
 
-        public async Task<Trip?> UpdateAsync(Trip trip, CancellationToken ct = default)
+        public async Task<Trip?> UpdateAsync(Trip trip, Guid userId, CancellationToken ct = default)
         {
-            if (trip is null || trip.Id == Guid.Empty) return null;
+            if (trip is null || trip.Id == Guid.Empty || trip.AuthorId != userId) return null;
 
             return await _tripRepository.UpdateAsync(trip, ct);
         }
