@@ -4,8 +4,9 @@ namespace HikeConnect.Core.Interfaces
 {
     public interface ITripService
     {
+        Task<IReadOnlyList<Trip>> GetAllAsync(CancellationToken ct = default);
         Task<Trip?> GetByIdAsync(Guid id, CancellationToken ct = default);
-        Task<IEnumerable<Trip>> GetAllAsync(CancellationToken ct = default);
+        Task<IReadOnlyList<Trip>> GetByUserIdAsync(Guid userId, CancellationToken ct = default);
 
         Task<Trip?> CreateAsync(Trip trip, CancellationToken ct = default);
         Task<Trip?> UpdateAsync(Trip trip, CancellationToken ct = default);

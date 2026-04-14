@@ -1,38 +1,66 @@
-﻿using HikeConnect.Core.Entities;
+﻿using HikeConnect.Core.Dtos;
+using HikeConnect.Core.Entities;
 using HikeConnect.Core.Interfaces;
 
 namespace HikeConnect.Application.Services
 {
     public class BehavioralProfileService : IBehavioralProfileService
     {
-        public Task<BehavioralProfile?> CreateAsync(BehavioralProfile profile, CancellationToken cancellationToken = default)
+        private readonly IBehavioralProfileRepository _behavioralProfileRepository;
+        private readonly IMatchingService _matchingService;
+
+        public BehavioralProfileService(
+            IBehavioralProfileRepository behavioralProfileRepository,
+            IMatchingService matchingService)
         {
-            throw new NotImplementedException();
+            _behavioralProfileRepository = behavioralProfileRepository;
+            _matchingService = matchingService;
         }
 
-        public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<BehavioralProfile?> CreateAsync(BehavioralSurveySubmissionRequest request, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            if (request is null || request.UserId == Guid.Empty) return null;
+
+            var normalizedProfile = _matchingService.BuildBehavioralProfile(request);
+            return await _behavioralProfileRepository.AddAsync(normalizedProfile, cancellationToken);
         }
 
-        public Task<IReadOnlyList<BehavioralProfile>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            if (id == Guid.Empty) return;
+
+            await _behavioralProfileRepository.DeleteAsync(id, cancellationToken);
         }
 
-        public Task<BehavioralProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<BehavioralProfile>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return await _behavioralProfileRepository.GetAllAsync(cancellationToken);
         }
 
-        public Task<BehavioralProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+        public async Task<BehavioralProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            if (id == Guid.Empty) return null;
+
+            return await _behavioralProfileRepository.GetByIdAsync(id, cancellationToken);
         }
 
-        public Task<BehavioralProfile?> UpdateAsync(BehavioralProfile profile, CancellationToken cancellationToken = default)
+        public async Task<BehavioralProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            if (userId == Guid.Empty) return null;
+
+            return await _behavioralProfileRepository.GetByUserIdAsync(userId, cancellationToken);
         }
+
+        public async Task<BehavioralProfile?> UpdateAsync(BehavioralProfile profile, CancellationToken cancellationToken = default)
+        {
+            if (profile is null || profile.Id == Guid.Empty || profile.UserId == Guid.Empty)
+            {
+                return null;
+            }
+
+            profile.LastUpdatedAt = DateTime.UtcNow;
+            return await _behavioralProfileRepository.UpdateAsync(profile, cancellationToken);
+        }
+
     }
 }
