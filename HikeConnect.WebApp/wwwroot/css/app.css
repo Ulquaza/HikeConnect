@@ -962,3 +962,267 @@ a:visited {
         align-items: stretch;
     }
 }
+
+.view-trip-page {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 24px 16px 56px;
+}
+
+.view-trip-loading {
+    text-align: center;
+    color: #b9b9b9;
+    margin-top: 40px;
+}
+
+.view-trip-hero {
+    position: relative;
+    border-radius: 18px;
+    overflow: visible;
+    margin-bottom: 26px;
+}
+
+.view-trip-hero-image {
+    display: block;
+    width: 100%;
+    height: 360px;
+    object-fit: cover;
+    border-radius: 18px;
+}
+
+.view-trip-hero-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 46%;
+    border-radius: 0 0 18px 18px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.86), rgba(0, 0, 0, 0));
+}
+
+.view-trip-hero-content {
+    position: absolute;
+    left: 24px;
+    bottom: 18px;
+    z-index: 2;
+}
+
+.view-trip-hero-content h1 {
+    margin: 0 0 8px;
+    color: white;
+    font-size: 34px;
+}
+
+.view-trip-hero-content p {
+    margin: 0;
+    color: #e8e3df;
+    font-size: 17px;
+}
+
+.view-trip-join-button {
+    position: absolute;
+    right: 24px;
+    bottom: -24px;
+    z-index: 3;
+    background: var(--main-accent-color);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 22px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    transition: background 0.2s ease;
+}
+
+.view-trip-join-button:hover:enabled {
+    background: var(--main-accent-faded-color);
+}
+
+.view-trip-join-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.view-trip-status {
+    margin: 8px 0 18px;
+    color: #ffa15d;
+}
+
+.view-trip-description,
+.view-trip-compatibility,
+.view-trip-risks,
+.view-trip-members,
+.view-trip-pending {
+    margin-top: 20px;
+    max-width: 100%;
+}
+
+.view-trip-description h2,
+.view-trip-risks h2,
+.view-trip-members h2,
+.view-trip-pending h2 {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.view-trip-description p {
+    margin: 0;
+    line-height: 1.45;
+    color: #dfd9d5;
+}
+
+.view-trip-compatibility {
+    display: flex;
+    justify-content: center;
+}
+
+.view-trip-compatibility-circle {
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: conic-gradient(var(--main-accent-color) var(--compatibility-percent), #4a423f 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.view-trip-compatibility-inner {
+    width: 184px;
+    height: 184px;
+    border-radius: 50%;
+    background: #292523;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.view-trip-compatibility-value {
+    font-size: 42px;
+    font-weight: 700;
+}
+
+.view-trip-compatibility-label {
+    margin-top: 2px;
+    font-size: 14px;
+    color: #b9b9b9;
+}
+
+.view-trip-risk-item + .view-trip-risk-item {
+    margin-top: 16px;
+}
+
+.view-trip-risk-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 15px;
+}
+
+.view-trip-risk-track {
+    margin-top: 8px;
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: #4a423f;
+    overflow: hidden;
+}
+
+.view-trip-risk-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffb066, var(--main-accent-color));
+    border-radius: inherit;
+}
+
+.view-trip-risk-item p {
+    margin: 8px 0 0;
+    color: #cfc7c3;
+    font-size: 14px;
+}
+
+.view-trip-users-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.view-trip-user {
+    border: none;
+    background: transparent;
+    color: #f2ede9;
+    padding: 0;
+    width: 86px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.view-trip-user-action {
+    cursor: pointer;
+}
+
+.view-trip-user-action:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.view-trip-avatar-placeholder {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 8px;
+    border-radius: 50%;
+    background: #554e4b;
+    border: 1px solid #726864;
+}
+
+.view-trip-user-name {
+    font-size: 14px;
+    line-height: 1.25;
+    word-break: break-word;
+}
+
+.view-trip-empty {
+    margin: 0;
+    color: #b9b9b9;
+}
+
+@media (max-width: 768px) {
+    .view-trip-page {
+        padding: 16px 12px 38px;
+    }
+
+    .view-trip-hero-image {
+        height: 300px;
+    }
+
+    .view-trip-hero-content {
+        left: 16px;
+        bottom: 16px;
+    }
+
+    .view-trip-hero-content h1 {
+        font-size: 26px;
+    }
+
+    .view-trip-hero-content p {
+        font-size: 15px;
+    }
+
+    .view-trip-join-button {
+        right: 12px;
+        bottom: -22px;
+    }
+
+    .view-trip-compatibility-circle {
+        width: 200px;
+        height: 200px;
+    }
+
+    .view-trip-compatibility-inner {
+        width: 154px;
+        height: 154px;
+    }
+}
