@@ -1,5 +1,7 @@
-﻿using HikeConnect.Core.Dtos;
+﻿using HikeConnect.Api.Extensions;
+using HikeConnect.Core.Dtos;
 using HikeConnect.Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HikeConnect.Api.Controllers
@@ -104,6 +106,21 @@ namespace HikeConnect.Api.Controllers
             var user = await _authManager.GetUserByUserNameAsync(userName);
             return user is null
                 ? NotFound()
+                : Ok(user);
+        }
+
+        [Authorize]
+        [HttpPatch("user/bio")]
+        public async Task<IActionResult> UpdateBio([FromBody] UpdateUserBioRequest request)
+        {
+            if (!User.TryGetUserId(out var userId))
+            {
+                return Unauthorized();
+            }
+
+            var user = await _authManager.UpdateBioAsync(userId, request.Bio);
+            return user is null
+                ? BadRequest()
                 : Ok(user);
         }
     }

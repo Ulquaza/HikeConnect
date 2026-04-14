@@ -1,0 +1,241 @@
+﻿@page "/user/{username}"
+
+@attribute [Authorize]
+
+@inject JwtAuthStateProvider Auth
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<PageTitle>@(_user is null ? "Профиль - HikeConnect" : $"Профиль {_user.FullName} - HikeConnect")</PageTitle>
+
+@if (_isLoading)
+{
+    <div class="user-profile-page">
+        <p class="view-trip-loading">Загружаем профиль...</p>
+    </div>
+}
+else if (_user is null)
+{
+    <div class="user-profile-page">
+        <p class="view-trip-loading">Пользователь не найден.</p>
+    </div>
+}
+else
+{
+    <div class="user-profile-page">
+        <section class="card user-profile-card">
+            <div class="user-profile-head">
+                <div class="user-profile-left">
+                    <div class="user-profile-avatar-placeholder"></div>
+                    <div class="user-profile-main">
+                        <h1>@_user.FullName</h1>
+                        <p>Активен с @_user.RegisteredAt.ToString("dd.MM.yyyy")</p>
+                    </div>
+                </div>
+
+                <div class="user-profile-bio">
+                    @if (_isOwner && _isEditingBio)
+                    {
+                        <InputTextArea @bind-Value="_bioDraft" class="auth-input user-profile-bio-input" />
+                    }
+                    else
+                    {
+                        <p>@(string.IsNullOrWhiteSpace(_user.Bio) ? "Пользователь пока не добавил описание." : _user.Bio)</p>
+                    }
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_statusMessage))
+            {
+                <p class="user-profile-status">@_statusMessage</p>
+            }
+
+            @if (_isOwner)
+            {
+                <div class="user-profile-actions">
+                    @if (_isEditingBio)
+                    {
+                        <button type="button" class="auth-button" @onclick="SaveBioAsync" disabled="@_isSavingBio">
+                            @(_isSavingBio ? "Сохраняем..." : "Сохранить")
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="auth-button" @onclick="StartEditBio">
+                            Изменить
+                        </button>
+                    }
+                </div>
+            }
+        </section>
+
+        @if (!_isOwner)
+        {
+            <section class="card view-trip-compatibility">
+                <div class="view-trip-compatibility-circle"
+                     style="--compatibility-percent:@($"{_compatibilityPercentage}%");">
+                    <div class="view-trip-compatibility-inner">
+                        <div class="view-trip-compatibility-value">@_compatibilityPercentage%</div>
+                        <div class="view-trip-compatibility-label">Совместимость</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card view-trip-risks">
+                <h2>Анализ рисков</h2>
+
+                @if (_riskScales.Count == 0)
+                {
+                    <p class="view-trip-empty">Существенных рисков не выявлено.</p>
+                }
+                else
+                {
+                    @foreach (var scale in _riskScales)
+                    {
+                        <div class="view-trip-risk-item">
+                            <div class="view-trip-risk-head">
+                                <span>@scale.Title</span>
+                                <span>@scale.Percent%</span>
+                            </div>
+                            <div class="view-trip-risk-track">
+                                <div class="view-trip-risk-fill" style="width:@($"{scale.Percent}%");"></div>
+                            </div>
+                            <p>@scale.Message</p>
+                        </div>
+                    }
+                }
+            </section>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string Username { get; set; } = string.Empty;
+
+    private User? _user;
+    private bool _isLoading = true;
+    private bool _isEditingBio;
+    private bool _isSavingBio;
+    private string _bioDraft = string.Empty;
+    private string _statusMessage = string.Empty;
+    private int _compatibilityPercentage;
+    private readonly List<RiskScaleViewModel> _riskScales = [];
+    private bool _isOwner => _user is not null && _user.Id == Auth.UserId;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _isLoading = true;
+        _statusMessage = string.Empty;
+        _riskScales.Clear();
+        _compatibilityPercentage = 0;
+        _isEditingBio = false;
+
+        _user = await Http.GetFromJsonAsync<User>($"{ApiRoutes.Auth.UserByUsername}{Username}");
+        if (_user is not null)
+        {
+            _bioDraft = _user.Bio ?? string.Empty;
+
+            if (!_isOwner)
+            {
+                await LoadCompatibilityAsync(_user.Id);
+            }
+        }
+
+        _isLoading = false;
+    }
+
+    private void StartEditBio()
+    {
+        _bioDraft = _user?.Bio ?? string.Empty;
+        _isEditingBio = true;
+        _statusMessage = string.Empty;
+    }
+
+    private async Task SaveBioAsync()
+    {
+        if (_user is null || !_isOwner || _isSavingBio)
+        {
+            return;
+        }
+
+        _isSavingBio = true;
+        _statusMessage = string.Empty;
+
+        var request = new HttpRequestMessage(HttpMethod.Patch, ApiRoutes.Auth.UpdateBio)
+        {
+            Content = JsonContent.Create(new UpdateUserBioRequest
+            {
+                Bio = _bioDraft
+            })
+        };
+
+        var response = await Http.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+        {
+            var updatedUser = await response.Content.ReadFromJsonAsync<User>();
+            if (updatedUser is not null)
+            {
+                _user = updatedUser;
+                _bioDraft = _user.Bio ?? string.Empty;
+            }
+
+            _isEditingBio = false;
+            _statusMessage = "Описание обновлено.";
+        }
+        else
+        {
+            _statusMessage = "Не удалось обновить описание.";
+        }
+
+        _isSavingBio = false;
+    }
+
+    private async Task LoadCompatibilityAsync(Guid targetId)
+    {
+        var response = await Http.PostAsync($"{ApiRoutes.CompatibilityReport.Base}/{targetId}", content: null);
+        CompatibilityReport? report = null;
+
+        if (response.IsSuccessStatusCode)
+        {
+            report = await response.Content.ReadFromJsonAsync<CompatibilityReport>();
+        }
+        else
+        {
+            report = await Http.GetFromJsonAsync<CompatibilityReport>($"{ApiRoutes.CompatibilityReport.ByTargetId}{targetId}");
+        }
+
+        if (report is null)
+        {
+            return;
+        }
+
+        _compatibilityPercentage = Math.Clamp(report.CompatibilityPercentage, 0, 100);
+        var riskPoints = report.RiskPoints?.ToList() ?? [];
+        if (riskPoints.Count == 0)
+        {
+            return;
+        }
+
+        var maxWeight = Math.Max(1, riskPoints.Max(point => point.Weight));
+        foreach (var point in riskPoints)
+        {
+            var percent = Math.Clamp((int)Math.Round(point.Weight * 100d / maxWeight), 5, 100);
+            _riskScales.Add(new RiskScaleViewModel(
+                Title: HumanizeCode(point.Code),
+                Message: point.Message,
+                Percent: percent));
+        }
+    }
+
+    private static string HumanizeCode(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return "Риск";
+        }
+
+        return code.Replace('_', ' ');
+    }
+
+    private sealed record RiskScaleViewModel(string Title, string Message, int Percent);
+}

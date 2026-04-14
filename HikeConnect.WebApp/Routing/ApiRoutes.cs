@@ -10,6 +10,7 @@
             public const string Refresh = "auth/refresh";
             public const string UserById = "auth/user/";
             public const string UserByUsername = "auth/user/username/";
+            public const string UpdateBio = "auth/user/bio";
         }
 
         public static class BehavioralProfile
