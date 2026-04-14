@@ -1,5 +1,6 @@
 ﻿using HikeConnect.Core.Dtos;
 using HikeConnect.WebApp.Providers;
+using HikeConnect.WebApp.Routing;
 using Microsoft.AspNetCore.Components.WebAssembly.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -31,7 +32,7 @@ namespace HikeConnect.WebApp.Handlers
                     // повторно проверить: возможно, другой запрос уже обновил токен
                     if (_authProvider.IsAccessTokenExpired)
                     {
-                        var refreshUri = _baseUri + ApiRoutes.ApiRoutes.Auth.Refresh;
+                        var refreshUri = _baseUri + ApiRoutes.Auth.Refresh;
                         var refreshRequest = new HttpRequestMessage(HttpMethod.Get, refreshUri);
                         refreshRequest.SetBrowserRequestCredentials(BrowserRequestCredentials.Include); // не добавляем токен к запросу обновления
 

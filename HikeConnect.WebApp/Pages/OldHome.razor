@@ -45,7 +45,7 @@
     {
         try
         {
-            var response = await Http.GetAsync("test");
+            var response = await Http.GetAsync(ApiRoutes.Test.Base);
 
             if (response.IsSuccessStatusCode)
                 status = "всё в порядке";
