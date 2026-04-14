@@ -35,7 +35,8 @@ namespace HikeConnect.Api.Controllers
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.None,
-                Expires = result.RefreshTokenExpiresAt
+                Expires = result.RefreshTokenExpiresAt,
+                Path = "/"
             });
 
             return Ok(response);

@@ -21,11 +21,18 @@ namespace HikeConnect.WebApp
                 ? absoluteUri
                 : new Uri(new Uri(builder.HostEnvironment.BaseAddress), apiBaseUrl ?? "api/");
 
+            builder.Services.AddScoped(_ => apiBaseUri);
+
             builder.Services.AddSingleton<JwtAuthStateProvider>();
             builder.Services.AddSingleton<AuthenticationStateProvider>(sp =>
                 sp.GetRequiredService<JwtAuthStateProvider>());
 
             builder.Services.AddScoped<JwtAuthMessageHandler>();
+
+            builder.Services.AddHttpClient("NoAuth", client =>
+            {
+                client.BaseAddress = apiBaseUri;
+            });
 
             builder.Services.AddHttpClient("HikeConnect.Api", client =>
             {

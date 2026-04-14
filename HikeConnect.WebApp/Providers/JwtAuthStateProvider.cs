@@ -10,6 +10,7 @@ namespace HikeConnect.WebApp.Providers
 
         private ClaimsPrincipal? _user;
         public bool IsLoggedIn { get; private set; } = false;
+        public bool RefreshFailed { get; private set; } = false;
         public Guid UserId { get; private set; } = Guid.Empty;
         public string UserEmail { get; private set; } = string.Empty;
         public string UserRole { get; private set; } = string.Empty;
@@ -56,6 +57,16 @@ namespace HikeConnect.WebApp.Providers
             AccessToken = string.Empty;
 
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+        }
+
+        public void SetRefreshFailed()
+        {
+            RefreshFailed = true;
+        }
+
+        public void ResetRefreshFailed()
+        {
+            RefreshFailed = false;
         }
 
         private static ClaimsPrincipal CreateClaimsPrincipalFromJwt(string jwt)
