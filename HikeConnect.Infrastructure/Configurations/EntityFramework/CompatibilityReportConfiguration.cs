@@ -23,6 +23,9 @@ namespace HikeConnect.Infrastructure.Configurations.EntityFramework
                 .HasMaxLength(2048)
                 .IsRequired(true);
 
+            builder.Property(e => e.CreatedAt)
+                .IsRequired(true);
+
             builder.HasOne(e => e.Author)
                 .WithMany(e => e.CompatibilityReportsWhereAuthor)
                 .HasForeignKey(e => e.AuthorId)

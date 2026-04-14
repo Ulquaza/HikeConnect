@@ -11,6 +11,7 @@ namespace HikeConnect.Core.Entities
         public ICollection<CompatibilityPoint> MatchPoints { get; set; }  // jsonb
         public int CompatibilityPercentage { get; set; }
         public string SummaryText { get; set; }
+        public DateTime CreatedAt { get; set; }
 
         public virtual User Author { get; set; }
         public virtual User Target { get; set; }
