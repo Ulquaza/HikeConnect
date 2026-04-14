@@ -1,0 +1,345 @@
+﻿@page "/trip/{id:guid}"
+
+@attribute [Authorize]
+
+@inject JwtAuthStateProvider Auth
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<PageTitle>Поход - HikeConnect</PageTitle>
+
+@if (_isLoading)
+{
+    <div class="view-trip-page">
+        <p class="view-trip-loading">Загружаем поход...</p>
+    </div>
+}
+else if (_trip is null)
+{
+    <div class="view-trip-page">
+        <p class="view-trip-loading">Поход не найден.</p>
+    </div>
+}
+else
+{
+    <div class="view-trip-page">
+        <section class="view-trip-hero">
+            <img src="/images/tripMain.jpeg" alt="Маршрут похода" class="view-trip-hero-image" />
+            <div class="view-trip-hero-overlay"></div>
+
+            <div class="view-trip-hero-content">
+                <h1>@_trip.Name</h1>
+                <p>Старт: @_trip.StartAt.ToString("dd.MM.yyyy")</p>
+            </div>
+
+            @if (!_isAuthor)
+            {
+                <button type="button"
+                        class="view-trip-join-button"
+                        disabled="@_isJoining"
+                        @onclick="JoinTripAsync">
+                    @(_isJoining ? "Отправляем..." : "Присоединиться")
+                </button>
+            }
+        </section>
+
+        @if (!string.IsNullOrWhiteSpace(_statusMessage))
+        {
+            <p class="view-trip-status">@_statusMessage</p>
+        }
+
+        <section class="card view-trip-description">
+            <h2>Описание</h2>
+            <p>@_trip.Description</p>
+        </section>
+
+        @if (!_isAuthor)
+        {
+            <section class="card view-trip-compatibility">
+                <div class="view-trip-compatibility-circle"
+                     style="--compatibility-percent:@($"{_compatibilityPercentage}%");">
+                    <div class="view-trip-compatibility-inner">
+                        <div class="view-trip-compatibility-value">@_compatibilityPercentage%</div>
+                        <div class="view-trip-compatibility-label">Совместимость</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card view-trip-risks">
+                <h2>Анализ рисков</h2>
+
+                @if (_riskScales.Count == 0)
+                {
+                    <p class="view-trip-empty">Существенных рисков не выявлено.</p>
+                }
+                else
+                {
+                    @foreach (var scale in _riskScales)
+                    {
+                        <div class="view-trip-risk-item">
+                            <div class="view-trip-risk-head">
+                                <span>@scale.Title</span>
+                                <span>@scale.Percent%</span>
+                            </div>
+                            <div class="view-trip-risk-track">
+                                <div class="view-trip-risk-fill" style="width:@($"{scale.Percent}%");"></div>
+                            </div>
+                            <p>@scale.Message</p>
+                        </div>
+                    }
+                }
+            </section>
+        }
+
+        <section class="card view-trip-members">
+            <h2>Участники похода</h2>
+            <div class="view-trip-users-row">
+                @if (_approvedParticipants.Count == 0)
+                {
+                    <p class="view-trip-empty">Пока нет принятых участников.</p>
+                }
+                else
+                {
+                    @foreach (var participant in _approvedParticipants)
+                    {
+                        <div class="view-trip-user">
+                            <div class="view-trip-avatar-placeholder"></div>
+                            <div class="view-trip-user-name">@participant.DisplayName</div>
+                        </div>
+                    }
+                }
+            </div>
+        </section>
+
+        @if (_isAuthor)
+        {
+            <section class="card view-trip-pending">
+                <h2>Ожидают принятия</h2>
+                <div class="view-trip-users-row">
+                    @if (_pendingParticipants.Count == 0)
+                    {
+                        <p class="view-trip-empty">Нет заявок в ожидании.</p>
+                    }
+                    else
+                    {
+                        @foreach (var participant in _pendingParticipants)
+                        {
+                            <button type="button"
+                                    class="view-trip-user view-trip-user-action"
+                                    disabled="@_processingRequestIds.Contains(participant.RequestId)"
+                                    title="Нажми, чтобы принять заявку"
+                                    @onclick="() => ApproveRequestAsync(participant.RequestId)">
+                                <div class="view-trip-avatar-placeholder"></div>
+                                <div class="view-trip-user-name">@participant.DisplayName</div>
+                            </button>
+                        }
+                    }
+                </div>
+            </section>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private Trip? _trip;
+    private CompatibilityReport? _compatibilityReport;
+    private int _compatibilityPercentage;
+    private bool _isLoading = true;
+    private bool _isJoining;
+    private bool _isAuthor;
+    private string _statusMessage = string.Empty;
+    private readonly List<TripParticipantViewModel> _approvedParticipants = [];
+    private readonly List<TripParticipantViewModel> _pendingParticipants = [];
+    private readonly List<RiskScaleViewModel> _riskScales = [];
+    private readonly HashSet<Guid> _processingRequestIds = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _isLoading = true;
+        _statusMessage = string.Empty;
+        _approvedParticipants.Clear();
+        _pendingParticipants.Clear();
+        _riskScales.Clear();
+        _compatibilityReport = null;
+        _compatibilityPercentage = 0;
+
+        await LoadTripAsync();
+
+        if (_trip is not null)
+        {
+            _isAuthor = _trip.AuthorId == Auth.UserId;
+            await LoadParticipationRequestsAsync();
+
+            if (!_isAuthor)
+            {
+                await EnsureCompatibilityReportAsync();
+            }
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task LoadTripAsync()
+    {
+        _trip = await Http.GetFromJsonAsync<Trip>($"{ApiRoutes.Trip.ById}{Id}");
+    }
+
+    private async Task LoadParticipationRequestsAsync()
+    {
+        if (_trip is null)
+        {
+            return;
+        }
+
+        var requests = await Http.GetFromJsonAsync<List<ParticipationRequest>>($"{ApiRoutes.ParticipationRequest.ByTripId}{_trip.Id}") ?? [];
+        var authorDisplayName = !string.IsNullOrWhiteSpace(_trip.Author?.FullName)
+            ? _trip.Author.FullName
+            : !string.IsNullOrWhiteSpace(_trip.Author?.UserName)
+                ? _trip.Author.UserName
+                : "Организатор";
+
+        _approvedParticipants.Add(new TripParticipantViewModel(Guid.Empty, authorDisplayName));
+
+        foreach (var request in requests)
+        {
+            if (request.UserId == Guid.Empty)
+            {
+                continue;
+            }
+
+            var displayName = ResolveDisplayName(request.User);
+
+            if (request.Status == ParticipationRequestStatus.Approved)
+            {
+                _approvedParticipants.Add(new TripParticipantViewModel(request.Id, displayName));
+            }
+            else if (_isAuthor && request.Status == ParticipationRequestStatus.Pending)
+            {
+                _pendingParticipants.Add(new TripParticipantViewModel(request.Id, displayName));
+            }
+        }
+    }
+
+    private async Task EnsureCompatibilityReportAsync()
+    {
+        if (_trip is null)
+        {
+            return;
+        }
+
+        var response = await Http.PostAsync($"{ApiRoutes.CompatibilityReport.Base}/{_trip.AuthorId}", content: null);
+        if (response.IsSuccessStatusCode)
+        {
+            _compatibilityReport = await response.Content.ReadFromJsonAsync<CompatibilityReport>();
+        }
+
+        if (_compatibilityReport is null)
+        {
+            _compatibilityReport = await Http.GetFromJsonAsync<CompatibilityReport>($"{ApiRoutes.CompatibilityReport.ByTargetId}{_trip.AuthorId}");
+        }
+
+        if (_compatibilityReport is null)
+        {
+            return;
+        }
+
+        _compatibilityPercentage = Math.Clamp(_compatibilityReport.CompatibilityPercentage, 0, 100);
+
+        var riskPoints = _compatibilityReport.RiskPoints?.ToList() ?? [];
+        if (riskPoints.Count == 0)
+        {
+            return;
+        }
+
+        var maxWeight = Math.Max(1, riskPoints.Max(point => point.Weight));
+        foreach (var point in riskPoints)
+        {
+            var percent = Math.Clamp((int)Math.Round(point.Weight * 100d / maxWeight), 5, 100);
+            _riskScales.Add(new RiskScaleViewModel(
+                Title: HumanizeCode(point.Code),
+                Message: point.Message,
+                Percent: percent));
+        }
+    }
+
+    private async Task JoinTripAsync()
+    {
+        if (_trip is null || _isJoining)
+        {
+            return;
+        }
+
+        _isJoining = true;
+        _statusMessage = string.Empty;
+
+        var response = await Http.PostAsync($"{ApiRoutes.ParticipationRequest.ById}{_trip.Id}", content: null);
+        _statusMessage = response.IsSuccessStatusCode
+            ? "Заявка отправлена организатору."
+            : "Не удалось отправить заявку. Возможно, она уже существует.";
+
+        _isJoining = false;
+    }
+
+    private async Task ApproveRequestAsync(Guid requestId)
+    {
+        if (!_processingRequestIds.Add(requestId))
+        {
+            return;
+        }
+
+        _statusMessage = string.Empty;
+        var response = await Http.PatchAsync(ApiRoutes.ParticipationRequest.Approve(requestId), content: null);
+        if (response.IsSuccessStatusCode)
+        {
+            var approvedRequest = await response.Content.ReadFromJsonAsync<ParticipationRequest>();
+            var approvedParticipant = _pendingParticipants.FirstOrDefault(item => item.RequestId == requestId);
+
+            if (approvedParticipant is not null)
+            {
+                _pendingParticipants.Remove(approvedParticipant);
+                _approvedParticipants.Add(approvedParticipant);
+            }
+            else if (approvedRequest is not null)
+            {
+                _approvedParticipants.Add(new TripParticipantViewModel(requestId, ResolveDisplayName(approvedRequest.User)));
+            }
+        }
+        else
+        {
+            _statusMessage = "Не удалось принять заявку.";
+        }
+
+        _processingRequestIds.Remove(requestId);
+    }
+
+    private static string ResolveDisplayName(User? user)
+    {
+        if (!string.IsNullOrWhiteSpace(user?.FullName))
+        {
+            return user.FullName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(user?.UserName))
+        {
+            return user.UserName;
+        }
+
+        return "Участник";
+    }
+
+    private static string HumanizeCode(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return "Риск";
+        }
+
+        return code.Replace('_', ' ');
+    }
+
+    private sealed record TripParticipantViewModel(Guid RequestId, string DisplayName);
+    private sealed record RiskScaleViewModel(string Title, string Message, int Percent);
+
+}

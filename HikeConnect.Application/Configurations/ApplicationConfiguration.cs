@@ -11,9 +11,11 @@ namespace HikeConnect.Application.Configurations
         {
             ArgumentNullException.ThrowIfNull(services);
 
+            services.AddScoped<ITokenService, JwtTokenService>();
             services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IBehavioralProfileService, BehavioralProfileService>();
             services.AddScoped<IMatchingService, MatchingService>();
+            services.AddScoped<IBehavioralProfileService, BehavioralProfileService>();
+            services.AddScoped<ICompatibilityReportService, CompatibilityReportService>();
             services.AddScoped<IParticipationRequestService, ParticipationRequestService>();
             services.AddScoped<ITripService, TripService>();
         }

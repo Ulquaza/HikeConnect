@@ -10,7 +10,8 @@ namespace HikeConnect.Core.Interfaces
         Task LogoutAsync(string? refreshToken);
         Task<RefreshTokenResponse> RefreshTokenAsync(string? refreshToken);
 
-        Task<User?> GetUserByIdAsync(string id);
+        Task<User?> GetUserByIdAsync(Guid id);
         Task<User?> GetUserByUserNameAsync(string userName);
+        Task<User?> UpdateBioAsync(Guid userId, string? bio);
     }
 }

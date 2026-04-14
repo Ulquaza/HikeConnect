@@ -1,5 +1,7 @@
 @page "/"
 
+@inject HttpClient Http
+@inject JwtAuthStateProvider Auth
 @inject NavigationManager Navigation
 
 <PageTitle>Главная - HikeConnect</PageTitle>
@@ -66,13 +68,9 @@
     <h2 class="trips-title">Предстоящие походы</h2>
 
     <div class="trips-grid">
-        @foreach (var trip in trips)
+        @foreach (var trip in _trips)
         {
-            <TripCard ImageUrl="@trip.ImageUrl"
-                      Name="@trip.Name"
-                      DateLabel="@trip.DateLabel"
-                      Description="@trip.Description"
-                      MatchPercent="@trip.MatchPercent" />
+            <TripCard Trip="@trip" ViewerUserId="@ViewerUserId" />
         }
     </div>
 </div>
@@ -94,20 +92,15 @@
 </div>
 
 @code {
-    private readonly List<TripCardItem> trips =
-    [
-        new("/images/trip1.webp", "Ергаки: озеро Художников", "ИЮЛ 12", "Неспешный поход с упором на природу, фото и спокойную атмосферу", 87),
-        new("/images/trip2.jpg", "Алтай: Шавлинские озёра", "АВГ 03", "Динамичный маршрут с длинными переходами и минимальными остановками", 72),
-        new("/images/trip3.jpg", "Кавказ: Архыз", "СЕН 18", "Баланс нагрузки и отдыха, с вечерними разговорами у костра", 91),
-        new("/images/trip4.jpg", "Карелия: лесные маршруты", "ИЮН 25", "Лёгкий поход с упором на отдых, природу и минимальный стресс", 65)
-    ];
+    private readonly List<Trip> _trips = [];
+    private Guid? ViewerUserId => Auth.UserId == Guid.Empty ? null : Auth.UserId;
 
-    private sealed record TripCardItem(
-        string ImageUrl,
-        string Name,
-        string DateLabel,
-        string Description,
-        int MatchPercent);
+    protected override async Task OnInitializedAsync()
+    {
+        var trips = await Http.GetFromJsonAsync<List<Trip>>(ApiRoutes.Trip.Base) ?? [];
+        _trips.Clear();
+        _trips.AddRange(trips.OrderBy(trip => trip.StartAt));
+    }
 
     void GoToLogin()
     {

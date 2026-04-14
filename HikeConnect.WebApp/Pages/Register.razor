@@ -1,5 +1,9 @@
 @page "/register"
 
+@inject HttpClient Http
+@inject JwtAuthStateProvider Auth
+@inject NavigationManager Nav
+
 <PageTitle>Регистрация - HikeConnect</PageTitle>
 
 <div class="container">
@@ -7,35 +11,33 @@
         <div class="auth-content">
             <h2>Регистрация</h2>
 
-            <EditForm Model="@registerRequest" OnSubmit="@HandleRegisterSubmit" class="auth-form">
+            <EditForm Model="@_registerRequest" OnSubmit="@HandleRegisterSubmitAsync" class="auth-form">
                 <div class="auth-field">
                     <label for="fullName">Отображаемое имя</label>
-                    <InputText id="fullName" @bind-Value="registerRequest.FullName" class="auth-input" />
+                    <InputText id="fullName" @bind-Value="_registerRequest.FullName" class="auth-input" />
                 </div>
 
                 <div class="auth-field">
                     <label for="username">Имя пользователя</label>
-                    <InputText id="username" @bind-Value="registerRequest.Username" class="auth-input" />
+                    <InputText id="username" @bind-Value="_registerRequest.Username" class="auth-input" />
                 </div>
 
                 <div class="auth-field">
                     <label for="email">Email</label>
-                    <InputText id="email" @bind-Value="registerRequest.Email" class="auth-input" />
+                    <InputText id="email" @bind-Value="_registerRequest.Email" class="auth-input" />
                 </div>
 
                 <div class="auth-field">
                     <label for="password">Пароль</label>
-                    <InputText id="password" @bind-Value="registerRequest.Password" type="password" class="auth-input" />
+                    <InputText id="password" @bind-Value="_registerRequest.Password" type="password" class="auth-input" />
                 </div>
 
                 <button type="submit" class="auth-button">Создать аккаунт</button>
             </EditForm>
 
-            @if (createdUser is not null)
+            @if (!string.IsNullOrWhiteSpace(_statusMessage))
             {
-                <p class="auth-status">
-                    Профиль готов: @createdUser.UserName (@createdUser.Email)
-                </p>
+                <p class="auth-status">@_statusMessage</p>
             }
 
             <div class="auth-links">
@@ -47,23 +49,43 @@
 </div>
 
 @code {
-    private readonly RegisterRequest registerRequest = new()
+    private readonly RegisterRequest _registerRequest = new()
     {
         FullName = string.Empty,
         Username = string.Empty,
         Email = string.Empty,
         Password = string.Empty
     };
-    private User? createdUser;
 
-    private void HandleRegisterSubmit()
+    private string _statusMessage = string.Empty;
+
+    private async Task HandleRegisterSubmitAsync()
     {
-        createdUser = new User
+        var response = await Http.PostAsJsonAsync(ApiRoutes.Auth.Register, _registerRequest);
+        var content = await response.Content.ReadFromJsonAsync<RegisterResponse>();
+
+        if (response.IsSuccessStatusCode && content?.IsRegistered is true)
         {
-            UserName = registerRequest.Username,
-            Email = registerRequest.Email,
-            FullName = registerRequest.FullName,
-            RegisteredAt = DateTime.UtcNow
-        };
+            var loginResponse = await Http.PostAsJsonAsync(ApiRoutes.Auth.Login, new LoginRequest
+            {
+                EmailOrUsername = _registerRequest.Username,
+                Password = _registerRequest.Password
+            });
+            var loginContent = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+
+            if (loginResponse.IsSuccessStatusCode && loginContent?.IsLoggedIn is true && !string.IsNullOrWhiteSpace(loginContent.AccessToken))
+            {
+                Auth.Login(loginContent.AccessToken);
+                Nav.NavigateTo("/survey");
+                return;
+            }
+
+            _statusMessage = "Аккаунт создан, но войти автоматически не удалось. Войди вручную.";
+            Nav.NavigateTo("/login");
+        }
+        else
+        {
+            _statusMessage = content?.ErrorMessage ?? "Ошибка регистрации.";
+        }
     }
 }
