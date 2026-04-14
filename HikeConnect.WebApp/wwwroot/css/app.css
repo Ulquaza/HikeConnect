@@ -127,6 +127,20 @@ a:visited {
     color: #e0e0e0;
 }
 
+.link-button {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: white;
+    cursor: pointer;
+    font: inherit;
+}
+
+    .link-button:hover {
+        text-decoration: underline;
+    }
+
 .container {
     height: 100vh;
     display: flex;
