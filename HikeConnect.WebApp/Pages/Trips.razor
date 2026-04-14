@@ -1,5 +1,8 @@
 @page "/trips"
 
+@inject HttpClient Http
+@inject JwtAuthStateProvider Auth
+
 <PageTitle>Походы - HikeConnect</PageTitle>
 
 <div class="trips-page">
@@ -19,11 +22,7 @@
             <div class="trips-grid">
                 @foreach (var trip in FilteredTrips)
                 {
-                    <TripCard ImageUrl="@trip.ImageUrl"
-                              Name="@trip.Name"
-                              DateLabel="@trip.DateLabel"
-                              Description="@trip.Description"
-                              MatchPercent="@trip.MatchPercent" />
+                    <TripCard Trip="@trip" ViewerUserId="@ViewerUserId" />
                 }
             </div>
         </section>
@@ -33,24 +32,58 @@
 
 @code {
     private bool onlyHighCompatibility;
+    private readonly List<Trip> _trips = [];
+    private readonly Dictionary<Guid, int> _compatibilityByTripId = new();
+    private Guid? ViewerUserId => Auth.UserId == Guid.Empty ? null : Auth.UserId;
 
-    private readonly List<TripCardItem> trips =
-    [
-        new("/images/trip1.webp", "Ергаки: озеро Художников", "ИЮЛ 12", "Неспешный поход с упором на природу, фото и спокойную атмосферу", 87),
-        new("/images/trip2.jpg", "Алтай: Шавлинские озёра", "АВГ 03", "Динамичный маршрут с длинными переходами и минимальными остановками", 72),
-        new("/images/trip3.jpg", "Кавказ: Архыз", "СЕН 18", "Баланс нагрузки и отдыха, с вечерними разговорами у костра", 91),
-        new("/images/trip4.jpg", "Карелия: лесные маршруты", "ИЮН 25", "Лёгкий поход с упором на отдых, природу и минимальный стресс", 65)
-    ];
-
-    private IEnumerable<TripCardItem> FilteredTrips =>
+    private IEnumerable<Trip> FilteredTrips =>
         onlyHighCompatibility
-            ? trips.Where(trip => trip.MatchPercent > 80)
-            : trips;
+            ? _trips.Where(trip => _compatibilityByTripId.TryGetValue(trip.Id, out var percent) && percent > 80)
+            : _trips;
 
-    private sealed record TripCardItem(
-        string ImageUrl,
-        string Name,
-        string DateLabel,
-        string Description,
-        int MatchPercent);
+    protected override async Task OnInitializedAsync()
+    {
+        var trips = await Http.GetFromJsonAsync<List<Trip>>(ApiRoutes.Trip.Base) ?? [];
+        _trips.Clear();
+        _trips.AddRange(trips.OrderBy(trip => trip.StartAt));
+
+        if (ViewerUserId is null || ViewerUserId == Guid.Empty)
+        {
+            return;
+        }
+
+        foreach (var trip in _trips)
+        {
+            if (trip.AuthorId == ViewerUserId.Value)
+            {
+                _compatibilityByTripId[trip.Id] = 100;
+                continue;
+            }
+
+            try
+            {
+                var response = await Http.PostAsync($"{ApiRoutes.CompatibilityReport.Base}/{trip.AuthorId}", content: null);
+                if (response.IsSuccessStatusCode)
+                {
+                    var report = await response.Content.ReadFromJsonAsync<CompatibilityReport>();
+                    if (report is not null)
+                    {
+                        _compatibilityByTripId[trip.Id] = Math.Clamp(report.CompatibilityPercentage, 0, 100);
+                    }
+                }
+                else
+                {
+                    var report = await Http.GetFromJsonAsync<CompatibilityReport>($"{ApiRoutes.CompatibilityReport.ByTargetId}{trip.AuthorId}");
+                    if (report is not null)
+                    {
+                        _compatibilityByTripId[trip.Id] = Math.Clamp(report.CompatibilityPercentage, 0, 100);
+                    }
+                }
+            }
+            catch
+            {
+                // keep missing compatibility as not matched for filter
+            }
+        }
+    }
 }
