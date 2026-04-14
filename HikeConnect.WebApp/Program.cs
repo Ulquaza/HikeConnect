@@ -29,7 +29,7 @@ namespace HikeConnect.WebApp
 
             builder.Services.AddHttpClient("HikeConnect.Api", client =>
             {
-                client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]!);
+                client.BaseAddress = apiBaseUri;
             }).AddHttpMessageHandler<JwtAuthMessageHandler>();
 
             builder.Services.AddScoped(sp =>
