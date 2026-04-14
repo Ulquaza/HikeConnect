@@ -29,7 +29,7 @@ namespace HikeConnect.Infrastructure.Contexts
             builder.ApplyConfiguration(new TripConfiguration());
             builder.ApplyConfiguration(new UserConfiguration());
 
-            builder.Entity<IdentityRole>().ToTable("Roles");
+            builder.Entity<IdentityRole<Guid>>().ToTable("Roles");
             builder.Entity<IdentityUserRole<Guid>>().ToTable("UserRoles");
         }
     }
