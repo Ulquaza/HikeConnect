@@ -12,5 +12,6 @@ namespace HikeConnect.Core.Interfaces
 
         Task<User?> GetUserByIdAsync(Guid id);
         Task<User?> GetUserByUserNameAsync(string userName);
+        Task<User?> UpdateBioAsync(Guid userId, string? bio);
     }
 }

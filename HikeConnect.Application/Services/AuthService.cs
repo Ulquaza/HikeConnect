@@ -28,6 +28,24 @@ namespace HikeConnect.Application.Services
             return await _userManager.Users.FirstOrDefaultAsync(e => e.UserName == userName);
         }
 
+        public async Task<User?> UpdateBioAsync(Guid userId, string? bio)
+        {
+            if (userId == Guid.Empty)
+            {
+                return null;
+            }
+
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            if (user is null)
+            {
+                return null;
+            }
+
+            user.Bio = string.IsNullOrWhiteSpace(bio) ? null : bio.Trim();
+            var updateResult = await _userManager.UpdateAsync(user);
+            return updateResult.Succeeded ? user : null;
+        }
+
         public async Task<LoginResponse> LoginAsync(LoginRequest loginRequest)
         {
             User? user;
@@ -107,8 +125,10 @@ namespace HikeConnect.Application.Services
 
             var user = new User
             {
+                FullName = registerRequest.FullName,
                 UserName = registerRequest.Username,
-                Email = registerRequest.Email
+                Email = registerRequest.Email,
+                RegisteredAt = DateTime.UtcNow
             };
 
             var createResult = await _userManager.CreateAsync(user, registerRequest.Password);

@@ -1,0 +1,103 @@
+﻿@page "/create"
+
+@attribute [Authorize]
+
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<PageTitle>Новый поход - HikeConnect</PageTitle>
+
+<div class="create-trip-page">
+    <div class="create-trip-header">
+        <h1 class="create-trip-title">Создай новый поход</h1>
+        <p class="create-trip-subtitle">Заполни основные детали, чтобы участники могли присоединиться к маршруту</p>
+    </div>
+
+    <section class="card create-trip-card">
+        <div class="create-trip-content">
+            <h2>Данные похода</h2>
+
+            <EditForm Model="_newTrip" OnSubmit="HandleCreateTripSubmitAsync" class="create-trip-form">
+                <div class="create-trip-field">
+                    <label for="tripName">Название</label>
+                    <InputText id="tripName" @bind-Value="_newTrip.Name" class="auth-input" />
+                </div>
+
+                <div class="create-trip-field">
+                    <label for="tripDescription">Описание</label>
+                    <InputTextArea id="tripDescription" @bind-Value="_newTrip.Description" class="auth-input create-trip-textarea" />
+                </div>
+
+                <div class="create-trip-field">
+                    <label for="tripStartAt">Дата начала</label>
+                    <InputDate id="tripStartAt" @bind-Value="_newTrip.StartAt" class="auth-input create-trip-date" />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(_statusMessage))
+                {
+                    <p class="create-trip-status">@_statusMessage</p>
+                }
+
+                <div class="create-trip-actions">
+                    <button type="button" class="create-trip-button-secondary" @onclick="GoBackToTrips" disabled="@_isSubmitting">
+                        Отмена
+                    </button>
+                    <button type="submit" class="auth-button" disabled="@_isSubmitting">
+                        @(_isSubmitting ? "Создаем..." : "Создать поход")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </section>
+</div>
+
+
+@code {
+    private Trip _newTrip = new()
+    {
+        Name = string.Empty,
+        Description = string.Empty,
+        StartAt = DateTime.Today
+    };
+    private bool _isSubmitting;
+    private string _statusMessage = string.Empty;
+
+    private async Task HandleCreateTripSubmitAsync()
+    {
+        if (_isSubmitting)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_newTrip.Name) ||
+            string.IsNullOrWhiteSpace(_newTrip.Description) ||
+            _newTrip.StartAt == default)
+        {
+            _statusMessage = "Заполни название, описание и дату начала.";
+            return;
+        }
+
+        _isSubmitting = true;
+        _statusMessage = string.Empty;
+
+        _newTrip.Name = _newTrip.Name.Trim();
+        _newTrip.Description = _newTrip.Description.Trim();
+
+        var response = await Http.PostAsJsonAsync(ApiRoutes.Trip.Base, _newTrip);
+        var createdTrip = await response.Content.ReadFromJsonAsync<Trip>();
+
+        if (response.IsSuccessStatusCode && createdTrip is not null && createdTrip.Id != Guid.Empty)
+        {
+            Nav.NavigateTo($"/trip/{createdTrip.Id}");
+            return;
+        }
+
+        _statusMessage = "Не удалось создать поход. Проверь данные и попробуй еще раз.";
+        _isSubmitting = false;
+    }
+
+    private void GoBackToTrips()
+    {
+        Nav.NavigateTo("/trips");
+    }
+}
