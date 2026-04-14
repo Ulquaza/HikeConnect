@@ -841,3 +841,124 @@ a:visited {
         width: 100%;
     }
 }
+
+.create-trip-page {
+    max-width: 840px;
+    margin: 0 auto;
+    padding: 40px 16px 56px;
+}
+
+.create-trip-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.create-trip-title {
+    margin: 0 0 10px;
+    font-size: 36px;
+}
+
+.create-trip-subtitle {
+    margin: 0 auto;
+    max-width: 680px;
+    color: #b9b9b9;
+    font-size: 18px;
+}
+
+.create-trip-card {
+    max-width: 100%;
+}
+
+.create-trip-content {
+    text-align: left;
+}
+
+.create-trip-content h2 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.create-trip-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.create-trip-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.create-trip-field label {
+    font-size: 14px;
+    opacity: 0.85;
+}
+
+.create-trip-textarea {
+    min-height: 130px;
+    resize: vertical;
+}
+
+.create-trip-date {
+    max-width: 260px;
+}
+
+.create-trip-status {
+    margin-top: 8px;
+    color: #ffa15d;
+    font-size: 14px;
+}
+
+.create-trip-actions {
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.create-trip-button-secondary {
+    background: transparent;
+    color: #f2ede9;
+    border: 1px solid #5a4f4a;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.create-trip-button-secondary:hover:enabled {
+    border-color: var(--main-accent-color);
+}
+
+.create-trip-button-secondary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .create-trip-page {
+        padding: 24px 14px 40px;
+    }
+
+    .create-trip-title {
+        font-size: 28px;
+    }
+
+    .create-trip-subtitle {
+        font-size: 16px;
+    }
+
+    .create-trip-date {
+        max-width: 100%;
+    }
+
+    .create-trip-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+}
