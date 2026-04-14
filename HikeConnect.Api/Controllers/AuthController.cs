@@ -89,7 +89,7 @@ namespace HikeConnect.Api.Controllers
             return Ok(response);
         }
 
-        [HttpGet("user/{id}")]
+        [HttpGet("user/{id:guid}")]
         public async Task<IActionResult> GetUserById(Guid id)
         {
             var user = await _authManager.GetUserByIdAsync(id);
