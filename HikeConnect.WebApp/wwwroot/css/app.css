@@ -1226,3 +1226,89 @@ a:visited {
         height: 154px;
     }
 }
+
+.user-profile-page {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 32px 16px 56px;
+}
+
+.user-profile-card {
+    max-width: 100%;
+}
+
+.user-profile-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 22px;
+}
+
+.user-profile-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 360px;
+}
+
+.user-profile-avatar-placeholder {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: #554e4b;
+    border: 1px solid #726864;
+    flex-shrink: 0;
+}
+
+.user-profile-main h1 {
+    margin: 0 0 8px;
+    font-size: 30px;
+}
+
+.user-profile-main p {
+    margin: 0;
+    color: #b9b9b9;
+}
+
+.user-profile-bio {
+    margin-left: auto;
+    max-width: 460px;
+    width: 100%;
+    text-align: right;
+}
+
+.user-profile-bio p {
+    margin: 0;
+    color: #dfd9d5;
+    line-height: 1.45;
+}
+
+.user-profile-bio-input {
+    min-height: 96px;
+    resize: vertical;
+}
+
+.user-profile-status {
+    margin: 12px 0 0;
+    color: #ffa15d;
+}
+
+.user-profile-actions {
+    margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+    .user-profile-head {
+        flex-direction: column;
+    }
+
+    .user-profile-left {
+        min-width: 0;
+    }
+
+    .user-profile-bio {
+        margin-left: 0;
+        max-width: 100%;
+        text-align: left;
+    }
+}
