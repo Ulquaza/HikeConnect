@@ -9,11 +9,11 @@ namespace HikeConnect.Api.Controllers
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class BahavioralProfileController : ControllerBase
+    public class BehavioralProfileController : ControllerBase
     {
         private readonly IBehavioralProfileService _behavioralProfileService;
 
-        public BahavioralProfileController(IBehavioralProfileService behavioralProfileService)
+        public BehavioralProfileController(IBehavioralProfileService behavioralProfileService)
         {
             _behavioralProfileService = behavioralProfileService;
         }
