@@ -17,9 +17,10 @@ namespace HikeConnect.Application.Services
             _matchingService = matchingService;
         }
 
-        public async Task<BehavioralProfile?> CreateAsync(BehavioralSurveySubmissionRequest request, CancellationToken cancellationToken = default)
+        public async Task<BehavioralProfile?> CreateAsync(BehavioralSurveySubmissionRequest request, Guid userId, CancellationToken cancellationToken = default)
         {
-            if (request is null || request.UserId == Guid.Empty) return null;
+            if (request is null || userId == Guid.Empty) return null;
+            request.UserId = userId;
 
             var normalizedProfile = _matchingService.BuildBehavioralProfile(request);
             return await _behavioralProfileRepository.AddAsync(normalizedProfile, cancellationToken);
@@ -51,13 +52,14 @@ namespace HikeConnect.Application.Services
             return await _behavioralProfileRepository.GetByUserIdAsync(userId, cancellationToken);
         }
 
-        public async Task<BehavioralProfile?> UpdateAsync(BehavioralProfile profile, CancellationToken cancellationToken = default)
+        public async Task<BehavioralProfile?> UpdateAsync(BehavioralProfile profile, Guid userId, CancellationToken cancellationToken = default)
         {
-            if (profile is null || profile.Id == Guid.Empty || profile.UserId == Guid.Empty)
+            if (profile is null || profile.Id == Guid.Empty || userId == Guid.Empty)
             {
                 return null;
             }
 
+            profile.UserId = userId;
             profile.LastUpdatedAt = DateTime.UtcNow;
             return await _behavioralProfileRepository.UpdateAsync(profile, cancellationToken);
         }

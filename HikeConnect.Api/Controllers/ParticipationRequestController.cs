@@ -51,6 +51,7 @@ namespace HikeConnect.Api.Controllers
             return Ok(requests);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPatch("{requestId:guid}")]
         public async Task<IActionResult> Update(Guid requestId, CancellationToken ct)
         {
