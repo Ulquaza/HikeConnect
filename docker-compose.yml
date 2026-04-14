@@ -5,9 +5,16 @@ services:
       dockerfile: HikeConnect.Api/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      Cors__AllowedOrigins__0: http://hikeconnect.spoons.su:9011
-      Cors__AllowedOrigins__1: https://hikeconnect.spoons.su
+      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
+      JwtSettings__SecretKey: ${JwtSettings__SecretKey}
+      Cors__AllowedOrigins__0: ${Cors__AllowedOrigins__0}
+      Cors__AllowedOrigins__1: ${Cors__AllowedOrigins__1}
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
+    networks:
+      - hike_net
 
   webapp:
     build:
@@ -18,3 +25,29 @@ services:
     depends_on:
       - api
     restart: unless-stopped
+    networks:
+      - hike_net
+
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - hike_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+
+networks:
+  hike_net:
+    driver: bridge
