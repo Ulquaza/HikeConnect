@@ -1,36 +1,110 @@
+@inject HttpClient Http
+@inject NavigationManager Nav
+
 <div class="trip-card">
-    <img src="@ImageUrl" class="trip-image" alt="@Name" />
+    <img src="/images/tripCard.jpg" class="trip-image" alt="@Trip?.Name" />
 
     <div class="trip-content">
         <div class="trip-header">
-            <div class="trip-name">@Name</div>
-            <div class="trip-date">@DateLabel</div>
+            <div class="trip-name">@Trip?.Name</div>
+            <div class="trip-date">
+                <div>@MonthLabel</div>
+                <div>@DayLabel</div>
+            </div>
         </div>
 
         <div class="trip-description">
-            @Description
+            @Trip?.Description
         </div>
     </div>
 
-    <div class="trip-footer">
+    <div class="trip-footer" role="button" tabindex="0" @onclick="NavigateFromMatchAsync">
         <div>СОВПАДЕНИЕ ПО ВАЙБУ</div>
-        <div class="match">@($"{MatchPercent}%")</div>
+        @if (ViewerUserId is null || ViewerUserId == Guid.Empty)
+        {
+            <div class="match" style="filter: blur(6px); user-select: none;">@_anonymousMatchPlaceholder</div>
+        }
+        else
+        {
+            <div class="match">@($"{_matchPercent}%")</div>
+        }
     </div>
 </div>
 
 @code {
-    [Parameter]
-    public string ImageUrl { get; set; } = string.Empty;
+    [Parameter] public Trip? Trip { get; set; }
+    [Parameter] public Guid? ViewerUserId { get; set; }
 
-    [Parameter]
-    public string Name { get; set; } = string.Empty;
+    private int _matchPercent;
+    private readonly string _anonymousMatchPlaceholder = Random.Shared.Next(10, 100).ToString("00");
 
-    [Parameter]
-    public string DateLabel { get; set; } = string.Empty;
+    private string MonthLabel =>
+        Trip is null
+            ? string.Empty
+            : Trip.StartAt.ToString("MMM", new System.Globalization.CultureInfo("ru-RU")).ToUpperInvariant()[..3];
 
-    [Parameter]
-    public string Description { get; set; } = string.Empty;
+    private string DayLabel =>
+        Trip is null
+            ? string.Empty
+            : Trip.StartAt.ToString("dd");
 
-    [Parameter]
-    public int MatchPercent { get; set; }
+    protected override async Task OnParametersSetAsync()
+    {
+        _matchPercent = 0;
+
+        if (Trip is null || ViewerUserId is null || ViewerUserId == Guid.Empty)
+        {
+            return;
+        }
+
+        if (Trip.AuthorId == ViewerUserId.Value)
+        {
+            _matchPercent = 100;
+            return;
+        }
+
+        await LoadMatchPercentAsync(Trip.AuthorId);
+    }
+
+    private async Task LoadMatchPercentAsync(Guid targetUserId)
+    {
+        try
+        {
+            var postResponse = await Http.PostAsync($"{ApiRoutes.CompatibilityReport.Base}/{targetUserId}", content: null);
+            if (postResponse.IsSuccessStatusCode)
+            {
+                var createdReport = await postResponse.Content.ReadFromJsonAsync<CompatibilityReport>();
+                if (createdReport is not null)
+                {
+                    _matchPercent = Math.Clamp(createdReport.CompatibilityPercentage, 0, 100);
+                    return;
+                }
+            }
+
+            var existingReport = await Http.GetFromJsonAsync<CompatibilityReport>($"{ApiRoutes.CompatibilityReport.ByTargetId}{targetUserId}");
+            if (existingReport is not null)
+            {
+                _matchPercent = Math.Clamp(existingReport.CompatibilityPercentage, 0, 100);
+            }
+        }
+        catch
+        {
+            _matchPercent = 0;
+        }
+    }
+
+    private Task NavigateFromMatchAsync()
+    {
+        if (Trip is null || Trip.Id == Guid.Empty)
+        {
+            return Task.CompletedTask;
+        }
+
+        var targetUrl = ViewerUserId is null || ViewerUserId == Guid.Empty
+            ? "/login"
+            : $"/trip/{Trip.Id}";
+
+        Nav.NavigateTo(targetUrl);
+        return Task.CompletedTask;
+    }
 }
