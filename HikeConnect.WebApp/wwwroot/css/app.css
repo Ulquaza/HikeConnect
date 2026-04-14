@@ -1169,13 +1169,14 @@ a:visited {
     cursor: not-allowed;
 }
 
-.view-trip-avatar-placeholder {
+.view-trip-avatar-image {
     width: 50px;
     height: 50px;
     margin: 0 auto 8px;
     border-radius: 50%;
-    background: #554e4b;
     border: 1px solid #726864;
+    object-fit: cover;
+    display: block;
 }
 
 .view-trip-user-name {
@@ -1251,13 +1252,13 @@ a:visited {
     min-width: 360px;
 }
 
-.user-profile-avatar-placeholder {
+.user-profile-avatar-image {
     width: 88px;
     height: 88px;
     border-radius: 50%;
-    background: #554e4b;
     border: 1px solid #726864;
     flex-shrink: 0;
+    object-fit: cover;
 }
 
 .user-profile-main h1 {
