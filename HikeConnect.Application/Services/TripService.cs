@@ -17,6 +17,7 @@ namespace HikeConnect.Application.Services
             if (trip is null) return null;
 
             trip.AuthorId = userId;
+            trip.Status = TripStatus.Planned;
             trip.CreatedAt = trip.CreatedAt == default ? DateTime.UtcNow : trip.CreatedAt;
 
             return await _tripRepository.AddAsync(trip, ct);
