@@ -81,14 +81,14 @@ namespace HikeConnect.Application.Services
             return _participationRequestRepository.GetByIdAsync(id, ct);
         }
 
-        public async Task<IEnumerable<ParticipationRequest>> GetByTripIdAsync(Guid tripId, CancellationToken ct = default)
+        public async Task<IReadOnlyList<ParticipationRequest>> GetByTripIdAsync(Guid tripId, CancellationToken ct = default)
         {
             if (tripId == Guid.Empty) return [];
 
             return await _participationRequestRepository.GetByTripIdAsync(tripId, ct);
         }
 
-        public async Task<IEnumerable<ParticipationRequest>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
+        public async Task<IReadOnlyList<ParticipationRequest>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
         {
             if (userId == Guid.Empty) return [];
 
