@@ -5,6 +5,7 @@
         public bool IsLoggedIn { get; set; }
         public string? ErrorMessage { get; set; }
         public string? AccessToken { get; set; }
-        // RefreshToken в куки
+        public string? RefreshToken { get; set; } // в контроллере уходит в куки
+        public DateTime RefreshTokenExpiresAt { get; set; }
     }
 }

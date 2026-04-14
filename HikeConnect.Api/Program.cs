@@ -1,4 +1,9 @@
+using HikeConnect.Application.Configurations;
+using HikeConnect.Core.Settings;
 using HikeConnect.Infrastructure.Configurations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace HikeConnect.Api
 {
@@ -8,20 +13,40 @@ namespace HikeConnect.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            var jwtSection = builder.Configuration.GetSection("JwtSettings");
+            var jwtSettings = jwtSection.Get<JwtSettings>();
+            var secretKey = Encoding.UTF8.GetBytes(jwtSettings!.SecretKey);
+            builder.Services.Configure<JwtSettings>(jwtSection);
 
-            builder.Services.AddRouting(options => options.LowercaseUrls = true);
-            builder.Services.AddControllers();
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtSettings.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = jwtSettings.Audience,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(secretKey),
+                    ValidateLifetime = true
+                };
+            });
+
+            builder.Services.AddAuthorization();
+            builder.Services.AddApplication(builder.Configuration);
+            //builder.Services.AddInfrastructure(builder.Configuration);
+
             //builder.Services.Configure<ForwardedHeadersOptions>(options =>
             //{
             //    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
             //    options.KnownNetworks.Clear();
             //    options.KnownProxies.Clear();
             //});
-
-            //builder.Services.AddInfrastructure(builder.Configuration);
 
             var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 
@@ -36,6 +61,11 @@ namespace HikeConnect.Api
                 });
             });
 
+            builder.Services.AddRouting(options => options.LowercaseUrls = true);
+            builder.Services.AddControllers();
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -48,6 +78,7 @@ namespace HikeConnect.Api
             app.UseForwardedHeaders();
             app.UseHttpsRedirection();
             app.UseCors("AllowWebApp");
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
