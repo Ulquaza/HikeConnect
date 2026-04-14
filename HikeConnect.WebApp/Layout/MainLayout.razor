@@ -1,5 +1,9 @@
 ﻿@inherits LayoutComponentBase
 
+@inject HttpClient Http
+@inject JwtAuthStateProvider Auth
+@inject NavigationManager Nav
+
 <div class="layout">
     <header tabindex="-1" class="header">
         <div class="header-container">
@@ -9,7 +13,16 @@
                 <NavLink href="/about">О проекте</NavLink>
                 <NavLink href="/contacts">Контакты</NavLink>
                 <NavLink href="/trips">Походы</NavLink>
-                <NavLink href="/login">Войти</NavLink>  @* добавить if *@
+                @if (Auth.IsLoggedIn)
+                {
+                    <NavLink href="/user/@(Auth.UserName)">Профиль</NavLink>
+                    <button class="link-button" @onclick="LogoutAsync">Выйти</button>
+                }
+                else
+                {
+                    <NavLink href="/login">Войти</NavLink>
+                }
+                
             </nav>
         </div>
     </header>
@@ -18,3 +31,16 @@
         @Body
     </main>
 </div>
+
+@code {
+    private async Task LogoutAsync()
+    {
+        var response = await Http.PostAsync(ApiRoutes.Auth.Logout);
+        var resp = await Http.GetAsync(ApiRoutes.Auth.Logout);
+        if (resp.IsSuccessStatusCode)
+        {
+            Auth.Logout();
+            Nav.NavigateTo("/");
+        }
+    }
+}
