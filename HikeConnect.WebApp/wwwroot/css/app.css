@@ -1261,6 +1261,10 @@ a:visited {
     object-fit: cover;
 }
 
+.user-profile-main {
+    text-align: left;
+}
+
 .user-profile-main h1 {
     margin: 0 0 8px;
     font-size: 30px;
