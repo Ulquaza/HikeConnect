@@ -1,4 +1,5 @@
-﻿using HikeConnect.Core.Entities;
+﻿using HikeConnect.Core.Dtos;
+using HikeConnect.Core.Entities;
 using HikeConnect.Core.Interfaces;
 
 namespace HikeConnect.Application.Services
@@ -12,9 +13,16 @@ namespace HikeConnect.Application.Services
             _tripRepository = tripRepository;
         }
 
-        public async Task<Trip?> CreateAsync(Trip trip, Guid userId, CancellationToken ct = default)
+        public async Task<Trip?> CreateAsync(CreateTripRequest request, Guid userId, CancellationToken ct = default)
         {
-            if (trip is null) return null;
+            if (request is null) return null;
+
+            var trip = new Trip
+            {
+                Name = request.Name,
+                Description = request.Description,
+                StartAt = request.StartAt
+            };
 
             trip.AuthorId = userId;
             trip.Status = TripStatus.Planned;
