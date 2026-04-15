@@ -67,7 +67,7 @@ namespace HikeConnect.Application.Services
             var trip = await _tripRepository.GetByIdAsync(tripId, ct);
             if (trip is null || trip.AuthorId != userId) return null;
 
-            trip.Status = TripStatus.Ongoing;
+            trip.Status = TripStatus.Planned;
             return await _tripRepository.UpdateAsync(trip, ct);
         }
 
@@ -78,7 +78,7 @@ namespace HikeConnect.Application.Services
             var trip = await _tripRepository.GetByIdAsync(tripId, ct);
             if (trip is null || trip.AuthorId != userId) return null;
 
-            trip.Status = TripStatus.Planned;
+            trip.Status = TripStatus.Ongoing;
             return await _tripRepository.UpdateAsync(trip, ct);
         }
 
