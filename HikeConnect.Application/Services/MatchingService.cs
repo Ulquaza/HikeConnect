@@ -1,4 +1,5 @@
-﻿using HikeConnect.Core.Dtos;
+﻿using System.Globalization;
+using HikeConnect.Core.Dtos;
 using HikeConnect.Core.Entities;
 using HikeConnect.Core.Interfaces;
 
@@ -147,6 +148,7 @@ namespace HikeConnect.Application.Services
                 matchMessage: "Совпадает стиль темпа в походе.",
                 mismatchCode: "pace_mismatch",
                 mismatchMessage: "Разный предпочитаемый темп движения.",
+                metricLabel: "Темп в походе",
                 matchPoints,
                 riskPoints);
 
@@ -158,6 +160,7 @@ namespace HikeConnect.Application.Services
                 matchMessage: "Похожие подходы к решению конфликтов.",
                 mismatchCode: "conflict_mismatch",
                 mismatchMessage: "Разные подходы к разрешению конфликтов.",
+                metricLabel: "Конфликты в группе",
                 matchPoints,
                 riskPoints);
 
@@ -237,6 +240,7 @@ namespace HikeConnect.Application.Services
             string matchMessage,
             string mismatchCode,
             string mismatchMessage,
+            string metricLabel,
             ICollection<CompatibilityPoint> matchPoints,
             ICollection<CompatibilityPoint> riskPoints)
         {
@@ -247,6 +251,7 @@ namespace HikeConnect.Application.Services
                 matchPoints.Add(new CompatibilityPoint
                 {
                     Code = matchCode,
+                    Label = metricLabel,
                     Message = matchMessage,
                     Weight = maxWeight
                 });
@@ -257,6 +262,7 @@ namespace HikeConnect.Application.Services
             riskPoints.Add(new CompatibilityPoint
             {
                 Code = mismatchCode,
+                Label = metricLabel,
                 Message = mismatchMessage,
                 Weight = maxWeight
             });
@@ -277,11 +283,14 @@ namespace HikeConnect.Application.Services
             var normalizedDifference = Math.Min(difference, 100) / 100d;
             var score = maxWeight * (1d - normalizedDifference);
 
+            var label = CapitalizeMetricLabel(metricLabel);
+
             if (difference <= 10)
             {
                 matchPoints.Add(new CompatibilityPoint
                 {
                     Code = $"{metricCode}_excellent",
+                    Label = label,
                     Message = $"Очень близкое совпадение по параметру: {metricLabel}.",
                     Weight = 8
                 });
@@ -291,6 +300,7 @@ namespace HikeConnect.Application.Services
                 matchPoints.Add(new CompatibilityPoint
                 {
                     Code = $"{metricCode}_good",
+                    Label = label,
                     Message = $"Допустимое расхождение по параметру: {metricLabel}.",
                     Weight = 4
                 });
@@ -300,6 +310,7 @@ namespace HikeConnect.Application.Services
                 riskPoints.Add(new CompatibilityPoint
                 {
                     Code = $"{metricCode}_warning",
+                    Label = label,
                     Message = $"Замечено ощутимое расхождение по параметру: {metricLabel}.",
                     Weight = 6
                 });
@@ -309,12 +320,24 @@ namespace HikeConnect.Application.Services
                 riskPoints.Add(new CompatibilityPoint
                 {
                     Code = $"{metricCode}_critical",
+                    Label = label,
                     Message = $"Критическое расхождение по параметру: {metricLabel}.",
                     Weight = 12
                 });
             }
 
             return score;
+        }
+
+        private static string CapitalizeMetricLabel(string metricLabel)
+        {
+            if (string.IsNullOrWhiteSpace(metricLabel))
+            {
+                return metricLabel;
+            }
+
+            var culture = CultureInfo.GetCultureInfo("ru-RU");
+            return char.ToUpper(metricLabel[0], culture) + metricLabel.Substring(1);
         }
 
         private static string GenerateSummaryText(
