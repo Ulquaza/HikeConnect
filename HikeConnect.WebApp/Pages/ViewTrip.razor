@@ -32,13 +32,33 @@ else
                 <p>Старт: @_trip.StartAt.ToString("dd.MM.yyyy")</p>
             </div>
 
-            @if (!_isAuthor)
+            @if (_isAuthor)
+            {
+                <button type="button"
+                        class="view-trip-join-button"
+                        disabled="@_isTripStatusChanging"
+                        @onclick="ToggleTripPublishStateAsync">
+                    @_tripPublishButtonText
+                </button>
+            }
+            else
             {
                 <button type="button"
                         class="view-trip-join-button"
                         disabled="@_isJoining"
-                        @onclick="JoinTripAsync">
-                    @(_isJoining ? "Отправляем..." : "Присоединиться")
+                        @onclick="ToggleParticipationAsync">
+                    @if (_isJoining)
+                    {
+                        <span>Отправляем...</span>
+                    }
+                    else if (_myPendingRequestId.HasValue)
+                    {
+                        <span>Отменить заявку</span>
+                    }
+                    else
+                    {
+                        <span>Присоединиться</span>
+                    }
                 </button>
             }
         </section>
@@ -123,7 +143,16 @@ else
                             <img src="/images/default_avatar.webp"
                                  class="view-trip-avatar-image"
                                  alt="@($"Аватар пользователя {participant.DisplayName}")" />
-                            <div class="view-trip-user-name">@participant.DisplayName</div>
+                            @if (string.IsNullOrWhiteSpace(participant.UserName))
+                            {
+                                <div class="view-trip-user-name">@participant.DisplayName</div>
+                            }
+                            else
+                            {
+                                <a class="view-trip-user-name view-trip-user-link" href="@($"/user/{participant.UserName}")">
+                                    @participant.DisplayName
+                                </a>
+                            }
                         </div>
                     }
                 }
@@ -143,16 +172,27 @@ else
                     {
                         @foreach (var participant in _pendingParticipants)
                         {
-                            <button type="button"
-                                    class="view-trip-user view-trip-user-action"
-                                    disabled="@_processingRequestIds.Contains(participant.RequestId)"
-                                    title="Нажми, чтобы принять заявку"
-                                    @onclick="() => ApproveRequestAsync(participant.RequestId)">
-                                <img src="/images/default_avatar.webp"
-                                     class="view-trip-avatar-image"
-                                     alt="@($"Аватар пользователя {participant.DisplayName}")" />
-                                <div class="view-trip-user-name">@participant.DisplayName</div>
-                            </button>
+                            <div class="view-trip-user">
+                                <button type="button"
+                                        class="view-trip-avatar-button"
+                                        disabled="@_processingRequestIds.Contains(participant.RequestId)"
+                                        title="Нажми, чтобы принять заявку"
+                                        @onclick="() => ApproveRequestAsync(participant.RequestId)">
+                                    <img src="/images/default_avatar.webp"
+                                         class="view-trip-avatar-image view-trip-avatar-image--pending"
+                                         alt="@($"Аватар пользователя {participant.DisplayName}")" />
+                                </button>
+                                @if (string.IsNullOrWhiteSpace(participant.UserName))
+                                {
+                                    <div class="view-trip-user-name">@participant.DisplayName</div>
+                                }
+                                else
+                                {
+                                    <a class="view-trip-user-name view-trip-user-link" href="@($"/user/{participant.UserName}")">
+                                        @participant.DisplayName
+                                    </a>
+                                }
+                            </div>
                         }
                     }
                 </div>
@@ -169,8 +209,11 @@ else
     private int _compatibilityPercentage;
     private bool _isLoading = true;
     private bool _isJoining;
+    private bool _isTripStatusChanging;
     private bool _isAuthor;
+    private Guid? _myPendingRequestId;
     private string _statusMessage = string.Empty;
+    private string _tripPublishButtonText = "Закрыть набор";
     private readonly List<TripParticipantViewModel> _approvedParticipants = [];
     private readonly List<TripParticipantViewModel> _pendingParticipants = [];
     private readonly List<RiskScaleViewModel> _riskScales = [];
@@ -183,6 +226,7 @@ else
         _statusMessage = string.Empty;
         _approvedParticipants.Clear();
         _pendingParticipants.Clear();
+        _myPendingRequestId = null;
         _riskScales.Clear();
         _matchScales.Clear();
         _compatibilityReport = null;
@@ -193,6 +237,7 @@ else
         if (_trip is not null)
         {
             _isAuthor = _trip.AuthorId == Auth.UserId;
+            SyncTripActionButtonText();
             await LoadParticipationRequestsAsync();
 
             if (!_isAuthor)
@@ -216,6 +261,10 @@ else
             return;
         }
 
+        _approvedParticipants.Clear();
+        _pendingParticipants.Clear();
+        _myPendingRequestId = null;
+
         var requests = await Http.GetFromJsonAsync<List<ParticipationRequestDto>>($"{ApiRoutes.ParticipationRequest.ByTripId}{_trip.Id}") ?? [];
         var authorDisplayName = !string.IsNullOrWhiteSpace(_trip.Author?.FullName)
             ? _trip.Author.FullName
@@ -223,7 +272,7 @@ else
                 ? _trip.Author.UserName
                 : "Организатор";
 
-        _approvedParticipants.Add(new TripParticipantViewModel(Guid.Empty, authorDisplayName));
+        _approvedParticipants.Add(new TripParticipantViewModel(Guid.Empty, authorDisplayName, _trip.Author?.UserName));
 
         foreach (var request in requests)
         {
@@ -236,13 +285,34 @@ else
 
             if (request.Status == ParticipationRequestStatus.Approved)
             {
-                _approvedParticipants.Add(new TripParticipantViewModel(request.Id, displayName));
+                _approvedParticipants.Add(new TripParticipantViewModel(request.Id, displayName, request.UserName));
             }
-            else if (_isAuthor && request.Status == ParticipationRequestStatus.Pending)
+            else if (request.Status == ParticipationRequestStatus.Pending)
             {
-                _pendingParticipants.Add(new TripParticipantViewModel(request.Id, displayName));
+                if (_isAuthor)
+                {
+                    _pendingParticipants.Add(new TripParticipantViewModel(request.Id, displayName, request.UserName));
+                }
+
+                if (request.UserId == Auth.UserId)
+                {
+                    _myPendingRequestId = request.Id;
+                }
             }
         }
+    }
+
+    private void SyncTripActionButtonText()
+    {
+        if (_trip is null)
+        {
+            _tripPublishButtonText = "Закрыть набор";
+            return;
+        }
+
+        _tripPublishButtonText = _trip.Status == TripStatus.Ongoing
+            ? "Открыть набор"
+            : "Закрыть набор";
     }
 
     private async Task EnsureCompatibilityReportAsync()
@@ -300,7 +370,7 @@ else
         }
     }
 
-    private async Task JoinTripAsync()
+    private async Task ToggleParticipationAsync()
     {
         if (_trip is null || _isJoining)
         {
@@ -310,12 +380,59 @@ else
         _isJoining = true;
         _statusMessage = string.Empty;
 
-        var response = await Http.PostAsync($"{ApiRoutes.ParticipationRequest.ById}{_trip.Id}", content: null);
-        _statusMessage = response.IsSuccessStatusCode
-            ? "Заявка отправлена организатору."
-            : "Не удалось отправить заявку. Возможно, она уже существует.";
+        if (_myPendingRequestId.HasValue)
+        {
+            var cancelResponse = await Http.PatchAsync(ApiRoutes.ParticipationRequest.Cancel(_myPendingRequestId.Value), content: null);
+            _statusMessage = cancelResponse.IsSuccessStatusCode
+                ? "Заявка отменена."
+                : "Не удалось отменить заявку.";
+        }
+        else
+        {
+            var joinResponse = await Http.PostAsync($"{ApiRoutes.ParticipationRequest.ById}{_trip.Id}", content: null);
+            _statusMessage = joinResponse.IsSuccessStatusCode
+                ? "Заявка отправлена организатору."
+                : "Не удалось отправить заявку. Возможно, она уже существует.";
+        }
+
+        await LoadParticipationRequestsAsync();
 
         _isJoining = false;
+    }
+
+    private async Task ToggleTripPublishStateAsync()
+    {
+        if (_trip is null || _isTripStatusChanging)
+        {
+            return;
+        }
+
+        _isTripStatusChanging = true;
+        _statusMessage = string.Empty;
+
+        var isClosed = _trip.Status == TripStatus.Planned;
+        var route = isClosed
+            ? ApiRoutes.Trip.Publish(_trip.Id)
+            : ApiRoutes.Trip.Unpublish(_trip.Id);
+
+        var response = await Http.PatchAsync(route, content: null);
+        if (response.IsSuccessStatusCode)
+        {
+            var updatedTrip = await response.Content.ReadFromJsonAsync<Trip>();
+            if (updatedTrip is not null)
+            {
+                _trip = updatedTrip;
+            }
+
+            SyncTripActionButtonText();
+            _statusMessage = isClosed ? "Набор открыт." : "Набор закрыт.";
+        }
+        else
+        {
+            _statusMessage = "Не удалось обновить статус набора.";
+        }
+
+        _isTripStatusChanging = false;
     }
 
     private async Task ApproveRequestAsync(Guid requestId)
@@ -339,7 +456,7 @@ else
             }
             else if (approvedRequest is not null)
             {
-                _approvedParticipants.Add(new TripParticipantViewModel(requestId, ResolveDisplayName(approvedRequest)));
+                _approvedParticipants.Add(new TripParticipantViewModel(requestId, ResolveDisplayName(approvedRequest), approvedRequest.UserName));
             }
         }
         else
@@ -385,7 +502,7 @@ else
         return code.Replace('_', ' ');
     }
 
-    private sealed record TripParticipantViewModel(Guid RequestId, string DisplayName);
+    private sealed record TripParticipantViewModel(Guid RequestId, string DisplayName, string? UserName);
     private sealed record RiskScaleViewModel(string Title, string Message, int Percent);
 
 }

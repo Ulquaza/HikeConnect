@@ -12,16 +12,17 @@
             <nav class="nav">
                 <NavLink href="/about">О проекте</NavLink>
                 <NavLink href="/contacts">Контакты</NavLink>
-                <NavLink href="/trips">Походы</NavLink>
-                <NavLink href="/create">Организовать</NavLink>
                 @if (Auth.IsLoggedIn)
                 {
-                    <NavLink href="@($"/user/{Auth.UserName}")">Профиль</NavLink>
+                    <NavLink class="ml-30" href="/trips">Походы</NavLink>
+                    <NavLink href="/create">Организовать</NavLink>
+
+                    <NavLink class="ml-30" href="@($"/user/{Auth.UserName}")">Профиль</NavLink>
                     <button class="link-button logout-button" @onclick="LogoutAsync">Выйти</button>
                 }
                 else
                 {
-                    <NavLink href="/login">Войти</NavLink>
+                    <NavLink class="ml-30" href="/login">Войти</NavLink>
                 }
                 
             </nav>
