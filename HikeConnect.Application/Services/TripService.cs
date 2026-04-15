@@ -21,12 +21,12 @@ namespace HikeConnect.Application.Services
             {
                 Name = request.Name,
                 Description = request.Description,
-                StartAt = request.StartAt
+                StartAt = ToUtcTimestamp(request.StartAt)
             };
 
             trip.AuthorId = userId;
             trip.Status = TripStatus.Planned;
-            trip.CreatedAt = trip.CreatedAt == default ? DateTime.UtcNow : trip.CreatedAt;
+            trip.CreatedAt = DateTime.UtcNow;
 
             return await _tripRepository.AddAsync(trip, ct);
         }
@@ -86,7 +86,21 @@ namespace HikeConnect.Application.Services
         {
             if (trip is null || trip.Id == Guid.Empty || trip.AuthorId != userId) return null;
 
+            trip.StartAt = ToUtcTimestamp(trip.StartAt);
+
             return await _tripRepository.UpdateAsync(trip, ct);
         }
+
+        /// <summary>
+        /// Npgsql (PostgreSQL timestamptz) принимает только UTC; Blazor InputDate даёт Local.
+        /// </summary>
+        private static DateTime ToUtcTimestamp(DateTime value) =>
+            value.Kind switch
+            {
+                DateTimeKind.Utc => value,
+                DateTimeKind.Local => value.ToUniversalTime(),
+                DateTimeKind.Unspecified => DateTime.SpecifyKind(value, DateTimeKind.Utc),
+                _ => value.ToUniversalTime()
+            };
     }
 }
