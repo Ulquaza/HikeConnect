@@ -13,29 +13,30 @@
             public const string UpdateBio = "auth/user/bio";
         }
 
+        // Сегменты совпадают с api/[controller] в ASP.NET (имя класса без «Controller», без дефисов).
         public static class BehavioralProfile
         {
-            public const string Base = "behavioral-profile";
-            public const string ById = "behavioral-profile/";
-            public const string ByUserId = "behavioral-profile/user/";
+            public const string Base = "behavioralprofile";
+            public const string ById = "behavioralprofile/";
+            public const string ByUserId = "behavioralprofile/user/";
         }
 
         public static class CompatibilityReport
         {
-            public const string Base = "compatibility-report";
-            public const string ById = "compatibility-report/";
-            public const string ByTargetId = "compatibility-report/target/";
-            public const string ByAuthorId = "compatibility-report/author/";
+            public const string Base = "compatibilityreport";
+            public const string ById = "compatibilityreport/";
+            public const string ByTargetId = "compatibilityreport/target/";
+            public const string ByAuthorId = "compatibilityreport/author/";
         }
 
         public static class ParticipationRequest
         {
-            public const string ById = "participation-request/";
-            public const string ByTripId = "participation-request/trip/";
-            public const string ByUserId = "participation-request/user/";
-            public static string Approve(Guid id) => $"participation-request/{id}/approve";
-            public static string Reject(Guid id) => $"participation-request/{id}/reject";
-            public static string Cancel(Guid id) => $"participation-request/{id}/cancel";
+            public const string ById = "participationrequest/";
+            public const string ByTripId = "participationrequest/trip/";
+            public const string ByUserId = "participationrequest/user/";
+            public static string Approve(Guid id) => $"participationrequest/{id}/approve";
+            public static string Reject(Guid id) => $"participationrequest/{id}/reject";
+            public static string Cancel(Guid id) => $"participationrequest/{id}/cancel";
         }
 
         public static class Trip
