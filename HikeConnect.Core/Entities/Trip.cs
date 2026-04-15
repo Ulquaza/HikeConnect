@@ -17,7 +17,7 @@
         public DateTime StartAt { get; set; }
         public DateTime CreatedAt { get; set; }
 
-        public virtual User Author { get; set; }
+        public virtual User? Author { get; set; }
 
         public virtual ICollection<ParticipationRequest> ParticipationRequests { get; set; } = new List<ParticipationRequest>();
     }

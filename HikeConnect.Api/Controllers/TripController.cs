@@ -1,4 +1,5 @@
 ﻿using HikeConnect.Api.Extensions;
+using HikeConnect.Core.Dtos;
 using HikeConnect.Core.Entities;
 using HikeConnect.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -35,14 +36,14 @@ namespace HikeConnect.Api.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Trip trip, CancellationToken ct)
+        public async Task<IActionResult> Create([FromBody] CreateTripRequest request, CancellationToken ct)
         {
             if (!User.TryGetUserId(out var authorId))
             {
                 return Unauthorized();
             }
 
-            var createdTrip = await _tripService.CreateAsync(trip, authorId, ct);
+            var createdTrip = await _tripService.CreateAsync(request, authorId, ct);
             return createdTrip is null
                 ? BadRequest()
                 : Ok(createdTrip);
