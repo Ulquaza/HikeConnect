@@ -162,22 +162,17 @@ else
             </section>
         }
 
-        <section class="card user-profile-trips">
-            <h2>Походы пользователя</h2>
-            @if (_userTrips.Count == 0)
-            {
-                <p class="view-trip-empty">Пока нет опубликованных походов.</p>
-            }
-            else
-            {
+        @if (_userTrips.Any())
+        {
+            <section class="card user-profile-trips">
                 <div class="user-profile-trips-grid">
                     @foreach (var trip in _userTrips)
                     {
                         <TripCard Trip="trip" ViewerUserId="Auth.UserId" />
                     }
                 </div>
-            }
-        </section>
+            </section>
+        }
     </div>
 }
 
