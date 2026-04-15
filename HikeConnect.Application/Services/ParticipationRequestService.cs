@@ -53,6 +53,12 @@ namespace HikeConnect.Application.Services
             var trip = await _tripRepository.GetByIdAsync(tripId, ct);
             if (trip is null || trip.AuthorId == userId) return null;
 
+            // Заявки принимаются только когда набор открыт.
+            if (trip.Status != TripStatus.Planned)
+            {
+                return null;
+            }
+
             var existingRequest = await _participationRequestRepository.GetByTripAndUserAsync(tripId, userId, ct);
             if (existingRequest is not null) return MapToDto(existingRequest);
 
