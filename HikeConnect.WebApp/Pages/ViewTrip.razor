@@ -216,7 +216,7 @@ else
             return;
         }
 
-        var requests = await Http.GetFromJsonAsync<List<ParticipationRequest>>($"{ApiRoutes.ParticipationRequest.ByTripId}{_trip.Id}") ?? [];
+        var requests = await Http.GetFromJsonAsync<List<ParticipationRequestDto>>($"{ApiRoutes.ParticipationRequest.ByTripId}{_trip.Id}") ?? [];
         var authorDisplayName = !string.IsNullOrWhiteSpace(_trip.Author?.FullName)
             ? _trip.Author.FullName
             : !string.IsNullOrWhiteSpace(_trip.Author?.UserName)
@@ -232,7 +232,7 @@ else
                 continue;
             }
 
-            var displayName = ResolveDisplayName(request.User);
+            var displayName = ResolveDisplayName(request);
 
             if (request.Status == ParticipationRequestStatus.Approved)
             {
@@ -329,7 +329,7 @@ else
         var response = await Http.PatchAsync(ApiRoutes.ParticipationRequest.Approve(requestId), content: null);
         if (response.IsSuccessStatusCode)
         {
-            var approvedRequest = await response.Content.ReadFromJsonAsync<ParticipationRequest>();
+            var approvedRequest = await response.Content.ReadFromJsonAsync<ParticipationRequestDto>();
             var approvedParticipant = _pendingParticipants.FirstOrDefault(item => item.RequestId == requestId);
 
             if (approvedParticipant is not null)
@@ -339,7 +339,7 @@ else
             }
             else if (approvedRequest is not null)
             {
-                _approvedParticipants.Add(new TripParticipantViewModel(requestId, ResolveDisplayName(approvedRequest.User)));
+                _approvedParticipants.Add(new TripParticipantViewModel(requestId, ResolveDisplayName(approvedRequest)));
             }
         }
         else
@@ -350,16 +350,16 @@ else
         _processingRequestIds.Remove(requestId);
     }
 
-    private static string ResolveDisplayName(User? user)
+    private static string ResolveDisplayName(ParticipationRequestDto? request)
     {
-        if (!string.IsNullOrWhiteSpace(user?.FullName))
+        if (!string.IsNullOrWhiteSpace(request?.UserFullName))
         {
-            return user.FullName;
+            return request.UserFullName;
         }
 
-        if (!string.IsNullOrWhiteSpace(user?.UserName))
+        if (!string.IsNullOrWhiteSpace(request?.UserName))
         {
-            return user.UserName;
+            return request.UserName;
         }
 
         return "Участник";

@@ -1,4 +1,5 @@
-﻿using HikeConnect.Core.Entities;
+﻿using HikeConnect.Core.Dtos;
+using HikeConnect.Core.Entities;
 using HikeConnect.Core.Interfaces;
 
 namespace HikeConnect.Application.Services
@@ -16,7 +17,7 @@ namespace HikeConnect.Application.Services
             _tripRepository = tripRepository;
         }
 
-        public async Task<ParticipationRequest?> ApproveAsync(Guid requestId, Guid organizerId, CancellationToken ct = default)
+        public async Task<ParticipationRequestDto?> ApproveAsync(Guid requestId, Guid organizerId, CancellationToken ct = default)
         {
             var request = await _participationRequestRepository.GetByIdAsync(requestId, ct);
             if (request is null || request.Status != ParticipationRequestStatus.Pending) return null;
@@ -25,10 +26,11 @@ namespace HikeConnect.Application.Services
             if (trip is null || trip.AuthorId != organizerId) return null;
 
             request.Status = ParticipationRequestStatus.Approved;
-            return await _participationRequestRepository.UpdateAsync(request, ct);
+            var updated = await _participationRequestRepository.UpdateAsync(request, ct);
+            return MapToDto(updated);
         }
 
-        public async Task<ParticipationRequest?> CancelAsync(Guid requestId, Guid userId, CancellationToken ct = default)
+        public async Task<ParticipationRequestDto?> CancelAsync(Guid requestId, Guid userId, CancellationToken ct = default)
         {
             var request = await _participationRequestRepository.GetByIdAsync(requestId, ct);
             if (request is null || request.UserId != userId) return null;
@@ -36,14 +38,15 @@ namespace HikeConnect.Application.Services
             if (request.Status == ParticipationRequestStatus.Rejected ||
                 request.Status == ParticipationRequestStatus.Canceled)
             {
-                return request;
+                return MapToDto(request);
             }
 
             request.Status = ParticipationRequestStatus.Canceled;
-            return await _participationRequestRepository.UpdateAsync(request, ct);
+            var updated = await _participationRequestRepository.UpdateAsync(request, ct);
+            return MapToDto(updated);
         }
 
-        public async Task<ParticipationRequest?> CreateAsync(Guid tripId, Guid userId, CancellationToken ct = default)
+        public async Task<ParticipationRequestDto?> CreateAsync(Guid tripId, Guid userId, CancellationToken ct = default)
         {
             if (tripId == Guid.Empty || userId == Guid.Empty) return null;
 
@@ -51,7 +54,7 @@ namespace HikeConnect.Application.Services
             if (trip is null || trip.AuthorId == userId) return null;
 
             var existingRequest = await _participationRequestRepository.GetByTripAndUserAsync(tripId, userId, ct);
-            if (existingRequest is not null) return existingRequest;
+            if (existingRequest is not null) return MapToDto(existingRequest);
 
             var request = new ParticipationRequest
             {
@@ -61,7 +64,8 @@ namespace HikeConnect.Application.Services
                 AppliedAt = DateTime.UtcNow
             };
 
-            return await _participationRequestRepository.AddAsync(request, ct);
+            var created = await _participationRequestRepository.AddAsync(request, ct);
+            return MapToDto(created);
         }
 
         public async Task DeleteAsync(Guid requestId, CancellationToken ct = default)
@@ -74,28 +78,31 @@ namespace HikeConnect.Application.Services
             await _participationRequestRepository.DeleteAsync(request, ct);
         }
 
-        public Task<ParticipationRequest?> GetByIdAsync(Guid id, CancellationToken ct = default)
+        public async Task<ParticipationRequestDto?> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
-            if (id == Guid.Empty) return Task.FromResult<ParticipationRequest?>(null);
+            if (id == Guid.Empty) return null;
 
-            return _participationRequestRepository.GetByIdAsync(id, ct);
+            var request = await _participationRequestRepository.GetByIdAsync(id, ct);
+            return MapToDto(request);
         }
 
-        public async Task<IReadOnlyList<ParticipationRequest>> GetByTripIdAsync(Guid tripId, CancellationToken ct = default)
+        public async Task<IReadOnlyList<ParticipationRequestDto>> GetByTripIdAsync(Guid tripId, CancellationToken ct = default)
         {
             if (tripId == Guid.Empty) return [];
 
-            return await _participationRequestRepository.GetByTripIdAsync(tripId, ct);
+            var requests = await _participationRequestRepository.GetByTripIdAsync(tripId, ct);
+            return requests.Select(MapToDto).Where(dto => dto is not null).Cast<ParticipationRequestDto>().ToList();
         }
 
-        public async Task<IReadOnlyList<ParticipationRequest>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
+        public async Task<IReadOnlyList<ParticipationRequestDto>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
         {
             if (userId == Guid.Empty) return [];
 
-            return await _participationRequestRepository.GetByUserIdAsync(userId, ct);
+            var requests = await _participationRequestRepository.GetByUserIdAsync(userId, ct);
+            return requests.Select(MapToDto).Where(dto => dto is not null).Cast<ParticipationRequestDto>().ToList();
         }
 
-        public async Task<ParticipationRequest?> RejectAsync(Guid requestId, Guid organizerId, CancellationToken ct = default)
+        public async Task<ParticipationRequestDto?> RejectAsync(Guid requestId, Guid organizerId, CancellationToken ct = default)
         {
             var request = await _participationRequestRepository.GetByIdAsync(requestId, ct);
             if (request is null || request.Status != ParticipationRequestStatus.Pending) return null;
@@ -104,10 +111,11 @@ namespace HikeConnect.Application.Services
             if (trip is null || trip.AuthorId != organizerId) return null;
 
             request.Status = ParticipationRequestStatus.Rejected;
-            return await _participationRequestRepository.UpdateAsync(request, ct);
+            var updated = await _participationRequestRepository.UpdateAsync(request, ct);
+            return MapToDto(updated);
         }
 
-        public async Task<ParticipationRequest?> UpdateAsync(Guid requestId, CancellationToken ct = default)
+        public async Task<ParticipationRequestDto?> UpdateAsync(Guid requestId, CancellationToken ct = default)
         {
             var request = await _participationRequestRepository.GetByIdAsync(requestId, ct);
             if (request is null) return null;
@@ -117,7 +125,27 @@ namespace HikeConnect.Application.Services
                 request.AppliedAt = DateTime.UtcNow;
             }
 
-            return await _participationRequestRepository.UpdateAsync(request, ct);
+            var updated = await _participationRequestRepository.UpdateAsync(request, ct);
+            return MapToDto(updated);
+        }
+
+        private static ParticipationRequestDto? MapToDto(ParticipationRequest? request)
+        {
+            if (request is null)
+            {
+                return null;
+            }
+
+            return new ParticipationRequestDto
+            {
+                Id = request.Id,
+                TripId = request.TripId,
+                UserId = request.UserId,
+                Status = request.Status,
+                AppliedAt = request.AppliedAt,
+                UserFullName = request.User?.FullName,
+                UserName = request.User?.UserName
+            };
         }
     }
 }
