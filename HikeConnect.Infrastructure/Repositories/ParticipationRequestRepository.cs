@@ -50,6 +50,7 @@ namespace HikeConnect.Infrastructure.Repositories
         {
             return await _context.ParticipationRequests
                 .AsNoTracking()
+                .Include(x => x.User)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
         }
 
@@ -57,6 +58,7 @@ namespace HikeConnect.Infrastructure.Repositories
         {
             return await _context.ParticipationRequests
                 .AsNoTracking()
+                .Include(x => x.User)
                 .Where(x => x.TripId == tripId && x.UserId == userId)
                 .FirstOrDefaultAsync(ct);
         }
@@ -65,7 +67,8 @@ namespace HikeConnect.Infrastructure.Repositories
         {
             return await _context.ParticipationRequests
                 .AsNoTracking()
-                .Where(x => x.Id == tripId)
+                .Include(x => x.User)
+                .Where(x => x.TripId == tripId)
                 .ToListAsync(ct);
         }
 
@@ -73,6 +76,7 @@ namespace HikeConnect.Infrastructure.Repositories
         {
             return await _context.ParticipationRequests
                 .AsNoTracking()
+                .Include(x => x.User)
                 .Where(x => x.UserId == userId)
                 .ToListAsync(ct);
         }
