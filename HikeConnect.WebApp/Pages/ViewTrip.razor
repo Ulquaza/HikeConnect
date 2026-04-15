@@ -45,7 +45,7 @@ else
             {
                 <button type="button"
                         class="view-trip-join-button"
-                        disabled="@_isJoining"
+                        disabled="@(_isJoining || (_myPendingRequestId is null && _trip.Status != TripStatus.Planned))"
                         @onclick="ToggleParticipationAsync">
                     @if (_isJoining)
                     {
@@ -54,6 +54,10 @@ else
                     else if (_myPendingRequestId.HasValue)
                     {
                         <span>Отменить заявку</span>
+                    }
+                    else if (_trip.Status != TripStatus.Planned)
+                    {
+                        <span>Набор закрыт</span>
                     }
                     else
                     {
@@ -395,6 +399,12 @@ else
     {
         if (_trip is null || _isJoining)
         {
+            return;
+        }
+
+        if (_myPendingRequestId is null && _trip.Status != TripStatus.Planned)
+        {
+            _statusMessage = "Набор в группу закрыт.";
             return;
         }
 
