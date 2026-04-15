@@ -3,7 +3,7 @@ using HikeConnect.WebApp.Providers;
 using HikeConnect.WebApp.Routing;
 using Microsoft.AspNetCore.Components.WebAssembly.Http;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace HikeConnect.WebApp.Handlers
 {
@@ -13,6 +13,7 @@ namespace HikeConnect.WebApp.Handlers
         private readonly HttpClient _httpClient;
         private readonly Uri _baseUri;
         private static readonly SemaphoreSlim _refreshLock = new SemaphoreSlim(1, 1);
+        private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.Web);
 
         public JwtAuthMessageHandler(JwtAuthStateProvider authProvider, Uri baseUri, IHttpClientFactory factory)
         {
@@ -42,7 +43,7 @@ namespace HikeConnect.WebApp.Handlers
                         Console.WriteLine($"REFRESH: {response.StatusCode} {raw}"); // временно, для дебага на сервере
                         if (response.IsSuccessStatusCode)
                         {
-                            var content = await response.Content.ReadFromJsonAsync<RefreshTokenResponse>(cancellationToken: cancellationToken);
+                            var content = JsonSerializer.Deserialize<RefreshTokenResponse>(raw, JsonSerializerOptions);
                             if (content?.AccessToken is not null)
                             {
                                 _authProvider.ResetRefreshFailed();

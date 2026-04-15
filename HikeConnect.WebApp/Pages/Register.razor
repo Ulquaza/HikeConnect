@@ -1,5 +1,7 @@
 @page "/register"
 
+@using System.Text.Json
+
 @inject HttpClient Http
 @inject JwtAuthStateProvider Auth
 @inject NavigationManager Nav
@@ -59,10 +61,19 @@
 
     private string _statusMessage = string.Empty;
 
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     private async Task HandleRegisterSubmitAsync()
     {
         var response = await Http.PostAsJsonAsync(ApiRoutes.Auth.Register, _registerRequest);
-        var content = await response.Content.ReadFromJsonAsync<RegisterResponse>();
+        var registerJson = await response.Content.ReadAsStringAsync();
+        RegisterResponse? content = TryDeserialize<RegisterResponse>(registerJson, out var registerParseError);
+
+        if (registerParseError is not null)
+        {
+            _statusMessage = $"Не удалось разобрать ответ сервера ({(int)response.StatusCode}). Проверь, что API доступен по адресу из настроек.";
+            return;
+        }
 
         if (response.IsSuccessStatusCode && content?.IsRegistered is true)
         {
@@ -71,7 +82,15 @@
                 EmailOrUsername = _registerRequest.Username,
                 Password = _registerRequest.Password
             });
-            var loginContent = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+            var loginJson = await loginResponse.Content.ReadAsStringAsync();
+            LoginResponse? loginContent = TryDeserialize<LoginResponse>(loginJson, out var loginParseError);
+
+            if (loginParseError is not null)
+            {
+                _statusMessage = "Аккаунт создан, но ответ при входе не распознан. Войди вручную.";
+                Nav.NavigateTo("/login");
+                return;
+            }
 
             if (loginResponse.IsSuccessStatusCode && loginContent?.IsLoggedIn is true && !string.IsNullOrWhiteSpace(loginContent.AccessToken))
             {
@@ -86,6 +105,26 @@
         else
         {
             _statusMessage = content?.ErrorMessage ?? "Ошибка регистрации.";
+        }
+    }
+
+    private static T? TryDeserialize<T>(string json, out string? error)
+    {
+        error = null;
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            error = "empty";
+            return default;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<T>(json, JsonOptions);
+        }
+        catch (JsonException)
+        {
+            error = "parse";
+            return default;
         }
     }
 }
