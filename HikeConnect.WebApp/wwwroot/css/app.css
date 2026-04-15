@@ -1193,7 +1193,7 @@ a:visited {
     background: transparent;
     color: #f2ede9;
     padding: 0;
-    width: 86px;
+    width: 94px;
     text-align: center;
     flex-shrink: 0;
 }
@@ -1221,7 +1221,7 @@ a:visited {
     border: none;
     background: transparent;
     padding: 0;
-    width: 100%;
+    width: 50px;
     cursor: pointer;
 }
 
@@ -1238,7 +1238,43 @@ a:visited {
     filter: brightness(0.78);
 }
 
+.view-trip-avatar-wrap {
+    position: relative;
+    width: 50px;
+    margin: 0 auto 8px;
+}
+
+.view-trip-avatar-wrap .view-trip-avatar-image {
+    margin: 0;
+}
+
+.view-trip-reject-button {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: none;
+    background: #d33b3b;
+    color: #fff;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.view-trip-reject-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
 .view-trip-user-name {
+    display: block;
+    width: 100%;
     font-size: 14px;
     line-height: 1.25;
     word-break: break-word;
@@ -1402,8 +1438,28 @@ a:visited {
     font-size: 13px;
 }
 
+.user-profile-trips {
+    margin-top: 20px;
+    max-width: none;
+}
+
+.user-profile-trips h2 {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.user-profile-trips-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
 @media (max-width: 900px) {
     .user-profile-survey-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .user-profile-trips-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -1425,5 +1481,5 @@ a:visited {
 }
 
 .ml-30 {
-    margin-left: 30px;
+    margin-left: 30px !important;
 }

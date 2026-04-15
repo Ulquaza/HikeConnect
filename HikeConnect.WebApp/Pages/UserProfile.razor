@@ -122,12 +122,16 @@ else
             <section class="card view-trip-risks">
                 <h2>Анализ рисков</h2>
 
-                @if (_riskScales.Count == 0)
+                @if (_riskScales.Count == 0 && _matchScales.Count == 0)
                 {
                     <p class="view-trip-empty">Существенных рисков не выявлено.</p>
                 }
                 else
                 {
+                    @if (_riskScales.Count == 0)
+                    {
+                        <p class="view-trip-empty">Существенных рисков не выявлено.</p>
+                    }
                     @foreach (var scale in _riskScales)
                     {
                         <div class="view-trip-risk-item">
@@ -141,9 +145,39 @@ else
                             <p>@scale.Message</p>
                         </div>
                     }
+                    @foreach (var scale in _matchScales)
+                    {
+                        <div class="view-trip-risk-item view-trip-risk-item--match">
+                            <div class="view-trip-risk-head">
+                                <span>@scale.Title</span>
+                                <span>@scale.Percent%</span>
+                            </div>
+                            <div class="view-trip-risk-track">
+                                <div class="view-trip-risk-fill view-trip-risk-fill--match" style="width:@($"{scale.Percent}%");"></div>
+                            </div>
+                            <p>@scale.Message</p>
+                        </div>
+                    }
                 }
             </section>
         }
+
+        <section class="card user-profile-trips">
+            <h2>Походы пользователя</h2>
+            @if (_userTrips.Count == 0)
+            {
+                <p class="view-trip-empty">Пока нет опубликованных походов.</p>
+            }
+            else
+            {
+                <div class="user-profile-trips-grid">
+                    @foreach (var trip in _userTrips)
+                    {
+                        <TripCard Trip="trip" ViewerUserId="Auth.UserId" />
+                    }
+                </div>
+            }
+        </section>
     </div>
 }
 
@@ -159,6 +193,8 @@ else
     private int _compatibilityPercentage;
     private BehavioralProfile? _behavioralProfile;
     private readonly List<RiskScaleViewModel> _riskScales = [];
+    private readonly List<RiskScaleViewModel> _matchScales = [];
+    private readonly List<Trip> _userTrips = [];
     private bool _isOwner => _user is not null && _user.Id == Auth.UserId;
 
     protected override async Task OnParametersSetAsync()
@@ -166,6 +202,8 @@ else
         _isLoading = true;
         _statusMessage = string.Empty;
         _riskScales.Clear();
+        _matchScales.Clear();
+        _userTrips.Clear();
         _compatibilityPercentage = 0;
         _isEditingBio = false;
         _behavioralProfile = null;
@@ -183,6 +221,8 @@ else
             {
                 await LoadBehavioralProfileAsync(_user.Id);
             }
+
+            await LoadUserTripsAsync(_user.Id);
         }
 
         _isLoading = false;
@@ -272,27 +312,57 @@ else
 
         _compatibilityPercentage = Math.Clamp(report.CompatibilityPercentage, 0, 100);
         var riskPoints = report.RiskPoints?.ToList() ?? [];
-        if (riskPoints.Count == 0)
+        var matchPoints = report.MatchPoints?.ToList() ?? [];
+        var allWeights = riskPoints.Select(point => point.Weight).Concat(matchPoints.Select(point => point.Weight)).ToList();
+        if (allWeights.Count == 0)
         {
             return;
         }
 
-        var maxWeight = Math.Max(1, riskPoints.Max(point => point.Weight));
+        var maxWeight = Math.Max(1, allWeights.Max());
         foreach (var point in riskPoints)
         {
             var percent = Math.Clamp((int)Math.Round(point.Weight * 100d / maxWeight), 5, 100);
             _riskScales.Add(new RiskScaleViewModel(
-                Title: HumanizeCode(point.Code),
+                Title: ResolvePointTitle(point),
+                Message: point.Message,
+                Percent: percent));
+        }
+
+        foreach (var point in matchPoints)
+        {
+            var percent = Math.Clamp((int)Math.Round(point.Weight * 100d / maxWeight), 5, 100);
+            _matchScales.Add(new RiskScaleViewModel(
+                Title: ResolvePointTitle(point),
                 Message: point.Message,
                 Percent: percent));
         }
     }
 
-    private static string HumanizeCode(string code)
+    private async Task LoadUserTripsAsync(Guid userId)
+    {
+        var allTrips = await Http.GetFromJsonAsync<List<Trip>>(ApiRoutes.Trip.Base) ?? [];
+        foreach (var trip in allTrips.Where(trip => trip.AuthorId == userId))
+        {
+            _userTrips.Add(trip);
+        }
+    }
+
+    private static string ResolvePointTitle(CompatibilityPoint point)
+    {
+        if (!string.IsNullOrWhiteSpace(point.Label))
+        {
+            return point.Label;
+        }
+
+        return HumanizeCode(point.Code);
+    }
+
+    private static string HumanizeCode(string? code)
     {
         if (string.IsNullOrWhiteSpace(code))
         {
-            return "Риск";
+            return "Параметр";
         }
 
         return code.Replace('_', ' ');

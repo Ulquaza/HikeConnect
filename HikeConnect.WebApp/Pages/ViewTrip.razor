@@ -140,9 +140,21 @@ else
                     @foreach (var participant in _approvedParticipants)
                     {
                         <div class="view-trip-user">
-                            <img src="/images/default_avatar.webp"
-                                 class="view-trip-avatar-image"
-                                 alt="@($"Аватар пользователя {participant.DisplayName}")" />
+                            <div class="view-trip-avatar-wrap">
+                                <img src="/images/default_avatar.webp"
+                                     class="view-trip-avatar-image"
+                                     alt="@($"Аватар пользователя {participant.DisplayName}")" />
+                                @if (_isAuthor && participant.RequestId != Guid.Empty)
+                                {
+                                    <button type="button"
+                                            class="view-trip-reject-button"
+                                            disabled="@_processingRequestIds.Contains(participant.RequestId)"
+                                            aria-label="@($"Отклонить {participant.DisplayName}")"
+                                            @onclick="() => RejectRequestAsync(participant.RequestId)">
+                                        ×
+                                    </button>
+                                }
+                            </div>
                             @if (string.IsNullOrWhiteSpace(participant.UserName))
                             {
                                 <div class="view-trip-user-name">@participant.DisplayName</div>
@@ -173,15 +185,24 @@ else
                         @foreach (var participant in _pendingParticipants)
                         {
                             <div class="view-trip-user">
-                                <button type="button"
-                                        class="view-trip-avatar-button"
-                                        disabled="@_processingRequestIds.Contains(participant.RequestId)"
-                                        title="Нажми, чтобы принять заявку"
-                                        @onclick="() => ApproveRequestAsync(participant.RequestId)">
-                                    <img src="/images/default_avatar.webp"
-                                         class="view-trip-avatar-image view-trip-avatar-image--pending"
-                                         alt="@($"Аватар пользователя {participant.DisplayName}")" />
-                                </button>
+                                <div class="view-trip-avatar-wrap">
+                                    <button type="button"
+                                            class="view-trip-avatar-button"
+                                            disabled="@_processingRequestIds.Contains(participant.RequestId)"
+                                            title="Нажми, чтобы принять заявку"
+                                            @onclick="() => ApproveRequestAsync(participant.RequestId)">
+                                        <img src="/images/default_avatar.webp"
+                                             class="view-trip-avatar-image view-trip-avatar-image--pending"
+                                             alt="@($"Аватар пользователя {participant.DisplayName}")" />
+                                    </button>
+                                    <button type="button"
+                                            class="view-trip-reject-button"
+                                            disabled="@_processingRequestIds.Contains(participant.RequestId)"
+                                            aria-label="@($"Отклонить {participant.DisplayName}")"
+                                            @onclick="() => RejectRequestAsync(participant.RequestId)">
+                                        ×
+                                    </button>
+                                </div>
                                 @if (string.IsNullOrWhiteSpace(participant.UserName))
                                 {
                                     <div class="view-trip-user-name">@participant.DisplayName</div>
@@ -390,9 +411,17 @@ else
         else
         {
             var joinResponse = await Http.PostAsync($"{ApiRoutes.ParticipationRequest.ById}{_trip.Id}", content: null);
-            _statusMessage = joinResponse.IsSuccessStatusCode
-                ? "Заявка отправлена организатору."
-                : "Не удалось отправить заявку. Возможно, она уже существует.";
+            if (joinResponse.IsSuccessStatusCode)
+            {
+                var createdOrExistingRequest = await joinResponse.Content.ReadFromJsonAsync<ParticipationRequestDto>();
+                _statusMessage = createdOrExistingRequest?.Status == ParticipationRequestStatus.Rejected
+                    ? "Организатор ранее отклонил вашу заявку для этого похода."
+                    : "Заявка отправлена организатору.";
+            }
+            else
+            {
+                _statusMessage = "Не удалось отправить заявку. Возможно, она уже существует.";
+            }
         }
 
         await LoadParticipationRequestsAsync();
@@ -410,7 +439,7 @@ else
         _isTripStatusChanging = true;
         _statusMessage = string.Empty;
 
-        var isClosed = _trip.Status == TripStatus.Planned;
+        var isClosed = _trip.Status == TripStatus.Ongoing;
         var route = isClosed
             ? ApiRoutes.Trip.Publish(_trip.Id)
             : ApiRoutes.Trip.Unpublish(_trip.Id);
@@ -462,6 +491,33 @@ else
         else
         {
             _statusMessage = "Не удалось принять заявку.";
+        }
+
+        _processingRequestIds.Remove(requestId);
+    }
+
+    private async Task RejectRequestAsync(Guid requestId)
+    {
+        if (!_processingRequestIds.Add(requestId))
+        {
+            return;
+        }
+
+        _statusMessage = string.Empty;
+        var response = await Http.PatchAsync(ApiRoutes.ParticipationRequest.Reject(requestId), content: null);
+        if (response.IsSuccessStatusCode)
+        {
+            _pendingParticipants.RemoveAll(item => item.RequestId == requestId);
+            _approvedParticipants.RemoveAll(item => item.RequestId == requestId);
+
+            if (_myPendingRequestId == requestId)
+            {
+                _myPendingRequestId = null;
+            }
+        }
+        else
+        {
+            _statusMessage = "Не удалось отклонить заявку.";
         }
 
         _processingRequestIds.Remove(requestId);
