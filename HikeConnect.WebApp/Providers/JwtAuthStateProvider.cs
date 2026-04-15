@@ -21,7 +21,8 @@ namespace HikeConnect.WebApp.Providers
         {
             get
             {
-                if (string.IsNullOrWhiteSpace(AccessToken)) return true;
+                // Без токена обновлять нечего — иначе каждый анонимный запрос лишний раз бьёт /auth/refresh.
+                if (string.IsNullOrWhiteSpace(AccessToken)) return false;
 
                 var handler = new JwtSecurityTokenHandler();
                 var jwtToken = handler.ReadJwtToken(AccessToken);
