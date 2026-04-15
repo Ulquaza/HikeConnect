@@ -1185,6 +1185,8 @@ a:visited {
     align-items: flex-start;
     gap: 16px;
     overflow-x: auto;
+    overflow-y: visible;
+    padding-top: 8px;
     padding-bottom: 4px;
 }
 
