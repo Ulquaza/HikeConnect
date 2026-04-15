@@ -105,7 +105,13 @@ namespace HikeConnect.Application.Services
         public async Task<ParticipationRequestDto?> RejectAsync(Guid requestId, Guid organizerId, CancellationToken ct = default)
         {
             var request = await _participationRequestRepository.GetByIdAsync(requestId, ct);
-            if (request is null || request.Status != ParticipationRequestStatus.Pending) return null;
+            if (request is null) return null;
+
+            if (request.Status != ParticipationRequestStatus.Pending &&
+                request.Status != ParticipationRequestStatus.Approved)
+            {
+                return null;
+            }
 
             var trip = await _tripRepository.GetByIdAsync(request.TripId, ct);
             if (trip is null || trip.AuthorId != organizerId) return null;
