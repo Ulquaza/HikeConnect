@@ -611,7 +611,6 @@ a:visited {
     align-items: baseline;
     gap: 6px;
     flex-shrink: 0;
-    min-width: 3.75rem;
     white-space: nowrap;
     background: #554e4b;
     padding: 4px 10px;
@@ -1218,10 +1217,40 @@ a:visited {
     display: block;
 }
 
+.view-trip-avatar-button {
+    border: none;
+    background: transparent;
+    padding: 0;
+    width: 100%;
+    cursor: pointer;
+}
+
+.view-trip-avatar-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.view-trip-avatar-image--pending {
+    transition: filter 0.18s ease;
+}
+
+.view-trip-avatar-button:hover .view-trip-avatar-image--pending {
+    filter: brightness(0.78);
+}
+
 .view-trip-user-name {
     font-size: 14px;
     line-height: 1.25;
     word-break: break-word;
+}
+
+.view-trip-user-link {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.view-trip-user-link:hover {
+    text-decoration: underline;
 }
 
 .view-trip-empty {
@@ -1393,4 +1422,8 @@ a:visited {
         max-width: 100%;
         text-align: left;
     }
+}
+
+.ml-30 {
+    margin-left: 30px;
 }
