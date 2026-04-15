@@ -55,7 +55,7 @@ else
 
         @if (!_isAuthor)
         {
-            <section class="card view-trip-compatibility">
+            <section class="view-trip-compatibility">
                 <div class="view-trip-compatibility-circle"
                      style="--compatibility-percent:@($"{_compatibilityPercentage}%");">
                     <div class="view-trip-compatibility-inner">
@@ -68,12 +68,16 @@ else
             <section class="card view-trip-risks">
                 <h2>Анализ рисков</h2>
 
-                @if (_riskScales.Count == 0)
+                @if (_riskScales.Count == 0 && _matchScales.Count == 0)
                 {
                     <p class="view-trip-empty">Существенных рисков не выявлено.</p>
                 }
                 else
                 {
+                    @if (_riskScales.Count == 0)
+                    {
+                        <p class="view-trip-empty">Существенных рисков не выявлено.</p>
+                    }
                     @foreach (var scale in _riskScales)
                     {
                         <div class="view-trip-risk-item">
@@ -83,6 +87,19 @@ else
                             </div>
                             <div class="view-trip-risk-track">
                                 <div class="view-trip-risk-fill" style="width:@($"{scale.Percent}%");"></div>
+                            </div>
+                            <p>@scale.Message</p>
+                        </div>
+                    }
+                    @foreach (var scale in _matchScales)
+                    {
+                        <div class="view-trip-risk-item view-trip-risk-item--match">
+                            <div class="view-trip-risk-head">
+                                <span>@scale.Title</span>
+                                <span>@scale.Percent%</span>
+                            </div>
+                            <div class="view-trip-risk-track">
+                                <div class="view-trip-risk-fill view-trip-risk-fill--match" style="width:@($"{scale.Percent}%");"></div>
                             </div>
                             <p>@scale.Message</p>
                         </div>
@@ -157,6 +174,7 @@ else
     private readonly List<TripParticipantViewModel> _approvedParticipants = [];
     private readonly List<TripParticipantViewModel> _pendingParticipants = [];
     private readonly List<RiskScaleViewModel> _riskScales = [];
+    private readonly List<RiskScaleViewModel> _matchScales = [];
     private readonly HashSet<Guid> _processingRequestIds = [];
 
     protected override async Task OnParametersSetAsync()
@@ -166,6 +184,7 @@ else
         _approvedParticipants.Clear();
         _pendingParticipants.Clear();
         _riskScales.Clear();
+        _matchScales.Clear();
         _compatibilityReport = null;
         _compatibilityPercentage = 0;
 
@@ -252,17 +271,30 @@ else
         _compatibilityPercentage = Math.Clamp(_compatibilityReport.CompatibilityPercentage, 0, 100);
 
         var riskPoints = _compatibilityReport.RiskPoints?.ToList() ?? [];
-        if (riskPoints.Count == 0)
+        var matchPoints = _compatibilityReport.MatchPoints?.ToList() ?? [];
+
+        var allWeights = riskPoints.Select(p => p.Weight).Concat(matchPoints.Select(p => p.Weight)).ToList();
+        if (allWeights.Count == 0)
         {
             return;
         }
 
-        var maxWeight = Math.Max(1, riskPoints.Max(point => point.Weight));
+        var maxWeight = Math.Max(1, allWeights.Max());
+
         foreach (var point in riskPoints)
         {
             var percent = Math.Clamp((int)Math.Round(point.Weight * 100d / maxWeight), 5, 100);
             _riskScales.Add(new RiskScaleViewModel(
-                Title: HumanizeCode(point.Code),
+                Title: ResolvePointTitle(point),
+                Message: point.Message,
+                Percent: percent));
+        }
+
+        foreach (var point in matchPoints)
+        {
+            var percent = Math.Clamp((int)Math.Round(point.Weight * 100d / maxWeight), 5, 100);
+            _matchScales.Add(new RiskScaleViewModel(
+                Title: ResolvePointTitle(point),
                 Message: point.Message,
                 Percent: percent));
         }
@@ -333,11 +365,21 @@ else
         return "Участник";
     }
 
-    private static string HumanizeCode(string code)
+    private static string ResolvePointTitle(CompatibilityPoint point)
+    {
+        if (!string.IsNullOrWhiteSpace(point.Label))
+        {
+            return point.Label;
+        }
+
+        return HumanizeCode(point.Code);
+    }
+
+    private static string HumanizeCode(string? code)
     {
         if (string.IsNullOrWhiteSpace(code))
         {
-            return "Риск";
+            return "Параметр";
         }
 
         return code.Replace('_', ' ');

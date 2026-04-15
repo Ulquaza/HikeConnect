@@ -606,8 +606,15 @@ a:visited {
 
 /* Дата */
 .trip-date {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+    flex-shrink: 0;
+    min-width: 3.75rem;
+    white-space: nowrap;
     background: #554e4b;
-    padding: 4px 8px;
+    padding: 4px 10px;
     border-radius: 6px;
     font-size: 12px;
     color: white;
@@ -630,6 +637,11 @@ a:visited {
     font-size: 14px;
     color: white;
     border-radius: 12px;
+    cursor: pointer;
+}
+
+.trip-footer:hover {
+    background: var(--main-accent-faded-color);
 }
 
 .match {
@@ -1031,7 +1043,7 @@ a:visited {
 .view-trip-join-button {
     position: absolute;
     right: 24px;
-    bottom: -24px;
+    bottom: -18px;
     z-index: 3;
     background: var(--main-accent-color);
     color: white;
@@ -1059,6 +1071,10 @@ a:visited {
     color: #ffa15d;
 }
 
+.view-trip-description {
+    text-align: left;
+}
+
 .view-trip-description,
 .view-trip-compatibility,
 .view-trip-risks,
@@ -1083,6 +1099,8 @@ a:visited {
 }
 
 .view-trip-compatibility {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
     display: flex;
     justify-content: center;
 }
@@ -1143,6 +1161,18 @@ a:visited {
     height: 100%;
     background: linear-gradient(90deg, #ffb066, var(--main-accent-color));
     border-radius: inherit;
+}
+
+.view-trip-risk-item + .view-trip-risk-item--match {
+    margin-top: 20px;
+}
+
+.view-trip-risk-item--match + .view-trip-risk-item--match {
+    margin-top: 16px;
+}
+
+.view-trip-risk-fill--match {
+    background: linear-gradient(90deg, #6ecf8f, #3d9a5c);
 }
 
 .view-trip-risk-item p {
