@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace HikeConnect.Infrastructure.Configurations
 {
@@ -20,8 +21,16 @@ namespace HikeConnect.Infrastructure.Configurations
             services.AddScoped<IParticipationRequestRepository, ParticipationRequestRepository>();
             services.AddScoped<ITripRepository, TripRepository>();
 
+            var connectionString = configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
+
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+            dataSourceBuilder.EnableDynamicJson();
+            var npgsqlDataSource = dataSourceBuilder.Build();
+            services.AddSingleton(npgsqlDataSource);
+
             services.AddDbContext<HikeConnectContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+                options.UseNpgsql(npgsqlDataSource));
 
             services.AddIdentityCore<User>(options =>
             {
