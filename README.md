@@ -86,21 +86,23 @@ HikeConnect предлагает:
 
 Проект построен по принципам **Clean Architecture**:
 
-- **MountLib.Core** — сущности и интерфейсы  
-- **MountLib.Application** — бизнес-логика  
-- **MountLib.Infrastructure** — работа с БД  
-- **MountLib.Api** — Web API  
-- **MountLib.BlazorApp** — клиентское приложение  
+- **HikeConnect.Core** — доменные сущности и контракты  
+- **HikeConnect.Application** — бизнес-логика и сценарии использования  
+- **HikeConnect.Infrastructure** — работа с БД, Identity и внешними инфраструктурными зависимостями  
+- **HikeConnect.Api** — ASP.NET Core Web API  
+- **HikeConnect.WebApp** — клиентское приложение на Blazor WebAssembly  
 
 
 
 ## 🛠️ Технологии
 
-- **C#**
+- **C# / .NET 10**
 - **Blazor WebAssembly**
 - **ASP.NET Core Web API**
+- **Entity Framework Core + Npgsql**
 - **PostgreSQL**
 - **Docker**
+- **Nginx** (раздача WebApp в контейнере)
 
 
 
@@ -127,3 +129,80 @@ HikeConnect предлагает:
 - Более точная модель поведения пользователя  
 - Расширенная система репутации  
 - Уведомления и автоматизация взаимодействия  
+
+
+
+## ✅ Реализовано в текущем MVP
+
+- Регистрация и вход пользователя  
+- Просмотр и редактирование профиля  
+- Поведенческий опрос и сохранение профиля поведения  
+- Расчет совместимости между пользователями  
+- Создание и просмотр походов  
+- Подача заявок в поход и модерация заявок организатором  
+- Просмотр участников похода и базовый анализ рисков совместимости  
+
+
+
+## 📦 Структура репозитория
+
+- `HikeConnect.Api` — API-слой, точки входа, авторизация, HTTP-эндпоинты  
+- `HikeConnect.WebApp` — UI на Blazor WebAssembly  
+- `HikeConnect.Application` — use cases, сервисы приложения  
+- `HikeConnect.Core` — доменная модель и контракты  
+- `HikeConnect.Infrastructure` — доступ к данным, EF Core, интеграции  
+- `docker-compose.yml` — сборка и запуск API, WebApp и PostgreSQL  
+
+
+
+## 🧰 Требования
+
+Для запуска через Docker:
+- **Docker**
+- **Docker Compose**
+
+Для локального запуска без Docker:
+- **.NET 10 SDK**
+- **PostgreSQL 18+**
+
+
+
+## ⚙️ Конфигурация
+
+1. Создайте файл `.env` в корне проекта.  
+2. Используйте `.env.example` как шаблон: в нем перечислены все обязательные поля для заполнения.  
+3. Укажите корректные значения для:
+   - подключения к БД (`POSTGRES_*`, `ConnectionStrings__DefaultConnection`);
+   - JWT-настроек (`JwtSettings__SecretKey` и связанные параметры);
+   - CORS-доменов (`Cors__AllowedOrigins__*`).
+
+
+
+## 🚀 Быстрый старт
+
+### Вариант 1: запуск через Docker Compose (рекомендуется)
+
+```bash
+docker compose up --build
+```
+
+После старта:
+- WebApp: `http://localhost:9011`
+- API: внутри docker-сети `hike_net` (доступен WebApp-контейнеру)
+
+
+### Вариант 2: локальный запуск без Docker
+
+1. Поднимите PostgreSQL и создай БД.  
+2. Настройте строку подключения и JWT-параметры в конфигурации API.  
+3. Запустите API:
+
+```bash
+dotnet run --project HikeConnect.Api
+```
+
+4. Запустите WebApp:
+
+```bash
+dotnet run --project HikeConnect.WebApp
+```
