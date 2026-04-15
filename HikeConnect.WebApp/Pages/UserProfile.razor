@@ -109,7 +109,7 @@ else
         }
         else
         {
-            <section class="card view-trip-compatibility">
+            <section class="view-trip-compatibility">
                 <div class="view-trip-compatibility-circle"
                      style="--compatibility-percent:@($"{_compatibilityPercentage}%");">
                     <div class="view-trip-compatibility-inner">
@@ -164,7 +164,7 @@ else
 
         @if (_userTrips.Any())
         {
-            <section class="card user-profile-trips">
+            <section class="user-profile-trips">
                 <div class="user-profile-trips-grid">
                     @foreach (var trip in _userTrips)
                     {
