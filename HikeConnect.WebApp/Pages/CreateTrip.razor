@@ -2,6 +2,8 @@
 
 @attribute [Authorize]
 
+@using System.Text.Json
+
 @inject HttpClient Http
 @inject NavigationManager Nav
 
@@ -62,6 +64,8 @@
     private bool _isSubmitting;
     private string _statusMessage = string.Empty;
 
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     private async Task HandleCreateTripSubmitAsync()
     {
         if (_isSubmitting)
@@ -84,7 +88,19 @@
         _newTrip.Description = _newTrip.Description.Trim();
 
         var response = await Http.PostAsJsonAsync(ApiRoutes.Trip.Base, _newTrip);
-        var createdTrip = await response.Content.ReadFromJsonAsync<Trip>();
+        var body = await response.Content.ReadAsStringAsync();
+        Trip? createdTrip = null;
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            try
+            {
+                createdTrip = JsonSerializer.Deserialize<Trip>(body, JsonOptions);
+            }
+            catch (JsonException)
+            {
+                // тело не JSON (например пустой ответ при 500)
+            }
+        }
 
         if (response.IsSuccessStatusCode && createdTrip is not null && createdTrip.Id != Guid.Empty)
         {
