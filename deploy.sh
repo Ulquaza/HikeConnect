@@ -7,9 +7,6 @@ cd "$REPO_DIR"
 echo "==> Pull latest"
 git pull --ff-only
 
-echo "==> Ensure shared docker network"
-docker network inspect hike_net >/dev/null 2>&1 || docker network create hike_net
-
 echo "==> Recreate HikeConnect stack"
 docker compose up -d --build --remove-orphans
 
