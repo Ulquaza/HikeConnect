@@ -50,4 +50,5 @@ volumes:
 
 networks:
   hike_net:
+    name: hike_net
     driver: bridge
