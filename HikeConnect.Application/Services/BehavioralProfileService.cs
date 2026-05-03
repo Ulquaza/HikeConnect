@@ -27,7 +27,7 @@ namespace HikeConnect.Application.Services
             _logger = logger;
         }
 
-        public async Task<BehavioralProfile?> CreateAsync(BehavioralSurveySubmissionRequest request, Guid userId, CancellationToken cancellationToken = default)
+        public async Task<BehavioralProfileDto?> CreateAsync(BehavioralSurveySubmissionRequest request, Guid userId, CancellationToken cancellationToken = default)
         {
             if (request is null || userId == Guid.Empty) return null;
             request.UserId = userId;
@@ -37,10 +37,10 @@ namespace HikeConnect.Application.Services
             if (saved is not null)
                 await TrySyncBehavioralProfileToCrmAsync(saved, userId, cancellationToken).ConfigureAwait(false);
 
-            return saved;
+            return MapToDto(saved);
         }
 
-        public async Task<BehavioralProfile?> UpdateFromSurveyAsync(
+        public async Task<BehavioralProfileDto?> UpdateFromSurveyAsync(
             BehavioralSurveySubmissionRequest request,
             Guid userId,
             CancellationToken cancellationToken = default)
@@ -64,31 +64,32 @@ namespace HikeConnect.Application.Services
             await _behavioralProfileRepository.DeleteAsync(id, cancellationToken);
         }
 
-        public async Task<IReadOnlyList<BehavioralProfile>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<BehavioralProfileDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return await _behavioralProfileRepository.GetAllAsync(cancellationToken);
+            var profiles = await _behavioralProfileRepository.GetAllAsync(cancellationToken);
+            return profiles.Select(MapToDto).Where(dto => dto is not null).Cast<BehavioralProfileDto>().ToList();
         }
 
-        public async Task<BehavioralProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<BehavioralProfileDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             if (id == Guid.Empty) return null;
 
-            return await _behavioralProfileRepository.GetByIdAsync(id, cancellationToken);
+            var profile = await _behavioralProfileRepository.GetByIdAsync(id, cancellationToken);
+            return MapToDto(profile);
         }
 
-        public async Task<BehavioralProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+        public async Task<BehavioralProfileDto?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
         {
             if (userId == Guid.Empty) return null;
 
-            return await _behavioralProfileRepository.GetByUserIdAsync(userId, cancellationToken);
+            var profile = await _behavioralProfileRepository.GetByUserIdAsync(userId, cancellationToken);
+            return MapToDto(profile);
         }
 
-        public async Task<BehavioralProfile?> UpdateAsync(BehavioralProfile profile, Guid userId, CancellationToken cancellationToken = default)
+        public async Task<BehavioralProfileDto?> UpdateAsync(BehavioralProfile profile, Guid userId, CancellationToken cancellationToken = default)
         {
             if (profile is null || profile.Id == Guid.Empty || userId == Guid.Empty)
-            {
                 return null;
-            }
 
             profile.UserId = userId;
             profile.LastUpdatedAt = DateTime.UtcNow;
@@ -96,7 +97,7 @@ namespace HikeConnect.Application.Services
             if (updated is not null)
                 await TrySyncBehavioralProfileToCrmAsync(updated, userId, cancellationToken).ConfigureAwait(false);
 
-            return updated;
+            return MapToDto(updated);
         }
 
         private async Task TrySyncBehavioralProfileToCrmAsync(
@@ -149,6 +150,23 @@ namespace HikeConnect.Application.Services
             {
                 _logger.LogError(ex, "CRM sync threw for behavioral profile (user {UserId}).", userId);
             }
+        }
+
+        private static BehavioralProfileDto? MapToDto(BehavioralProfile? profile)
+        {
+            if (profile is null)
+                return null;
+
+            return new BehavioralProfileDto
+            {
+                Id = profile.Id,
+                UserId = profile.UserId,
+                RiskTolerance = profile.RiskTolerance,
+                PacingStyle = profile.PacingStyle,
+                DisciplineLevel = profile.DisciplineLevel,
+                ConflictStrategy = profile.ConflictStrategy,
+                LastUpdatedAt = profile.LastUpdatedAt,
+            };
         }
 
     }
