@@ -1,12 +1,16 @@
 ﻿using HikeConnect.Core.Entities;
 using HikeConnect.Core.Interfaces;
+using HikeConnect.Core.Settings;
 using HikeConnect.Infrastructure.Contexts;
+using HikeConnect.Infrastructure.Crm;
 using HikeConnect.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Npgsql;
+using System.Net.Http.Headers;
 
 namespace HikeConnect.Infrastructure.Configurations
 {
@@ -20,6 +24,23 @@ namespace HikeConnect.Infrastructure.Configurations
             services.AddScoped<ICompatibilityReportRepository, CompatibilityReportRepository>();
             services.AddScoped<IParticipationRequestRepository, ParticipationRequestRepository>();
             services.AddScoped<ITripRepository, TripRepository>();
+
+            services.Configure<CrmTwentySettings>(configuration.GetSection(CrmTwentySettings.SectionName));
+            services
+                .AddHttpClient<TwentyCrmClient>((sp, client) =>
+                {
+                    var settings = sp.GetRequiredService<IOptions<CrmTwentySettings>>().Value;
+                    if (!string.IsNullOrWhiteSpace(settings.BaseUrl)
+                        && Uri.TryCreate(settings.BaseUrl.TrimEnd('/') + "/", UriKind.Absolute, out var baseUri))
+                    {
+                        client.BaseAddress = baseUri;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(settings.ApiKey))
+                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", settings.ApiKey);
+                });
+            services.AddScoped<ICrmClient>(sp => sp.GetRequiredService<TwentyCrmClient>());
+            services.AddScoped<ICrmSyncService, CrmSyncService>();
 
             var connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
