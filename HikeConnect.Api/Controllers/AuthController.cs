@@ -76,17 +76,20 @@ namespace HikeConnect.Api.Controllers
             RefreshTokenResponse response = new()
             {
                 ErrorMessage = result.ErrorMessage,
-                AccessToken = result.AccessToken
+                AccessToken = result.AccessToken,
+                RefreshToken = result.RefreshToken,
+                RefreshTokenExpiresAt = result.RefreshTokenExpiresAt
             };
 
-            if (response.AccessToken is null || response.RefreshToken is null) return Unauthorized(response);
+            if (result.AccessToken is null || result.RefreshToken is null) return Unauthorized(response);
 
             HttpContext.Response.Cookies.Append("refreshToken", result.RefreshToken!, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = result.RefreshTokenExpiresAt
+                SameSite = SameSiteMode.None,
+                Expires = result.RefreshTokenExpiresAt,
+                Path = "/"
             });
 
             return Ok(response);
