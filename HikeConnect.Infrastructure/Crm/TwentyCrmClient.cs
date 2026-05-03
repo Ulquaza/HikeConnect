@@ -14,34 +14,28 @@ namespace HikeConnect.Infrastructure.Crm
     public sealed class TwentyCrmClient : ICrmClient
     {
         private readonly HttpClient _http;
-        private readonly IOptions<CrmTwentySettings> _options;
+        private readonly CrmTwentySettings _twentySettings;
         private readonly ILogger<TwentyCrmClient> _logger;
 
-        public TwentyCrmClient(
-            HttpClient http,
-            IOptions<CrmTwentySettings> options,
-            ILogger<TwentyCrmClient> logger)
+        public TwentyCrmClient(HttpClient http, IOptions<CrmTwentySettings> options, ILogger<TwentyCrmClient> logger)
         {
             _http = http;
-            _options = options;
+            _twentySettings = options.Value;
             _logger = logger;
         }
 
-        public async Task<CrmOperationResult> UpsertBehavioralLeadAsync(
-            CrmBehavioralLeadSyncRequest request,
-            CancellationToken cancellationToken = default)
+        public async Task<CrmOperationResult> UpsertBehavioralLeadAsync(CrmBehavioralLeadSyncRequest request, CancellationToken cancellationToken = default)
         {
-            var settings = _options.Value;
-            if (!settings.IsConfigured)
+            if (!_twentySettings.IsConfigured)
             {
-                _logger.LogInformation("Twenty CRM sync skipped (Crm:Twenty not fully configured).");
+                _logger.LogInformation($"Twenty CRM sync skipped (Crm:Twenty not fully configured). BaseUrl: {_twentySettings.BaseUrl}; ApiKey: {_twentySettings.ApiKey}.");
                 return CrmOperationResult.Skipped();
             }
 
-            var mutationField = settings.GetCreateManyMutationFieldName();
-            var inputType = string.IsNullOrWhiteSpace(settings.CreateInputTypeName)
+            var mutationField = _twentySettings.GetCreateManyMutationFieldName();
+            var inputType = string.IsNullOrWhiteSpace(_twentySettings.CreateInputTypeName)
                 ? "BehavioralLeadCreateInput"
-                : settings.CreateInputTypeName.Trim();
+                : _twentySettings.CreateInputTypeName.Trim();
 
             var mutation =
                 $"mutation UpsertBehavioralLead($data: [{inputType}!]!, $upsert: Boolean!) {{ "
@@ -72,9 +66,9 @@ namespace HikeConnect.Infrastructure.Crm
                 ["variables"] = variables,
             };
 
-            var path = string.IsNullOrWhiteSpace(settings.GraphQlPath)
+            var path = string.IsNullOrWhiteSpace(_twentySettings.GraphQlPath)
                 ? "graphql"
-                : settings.GraphQlPath.TrimStart('/');
+                : _twentySettings.GraphQlPath.TrimStart('/');
 
             try
             {
@@ -83,10 +77,7 @@ namespace HikeConnect.Infrastructure.Crm
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning(
-                        "Twenty CRM HTTP {StatusCode}: {Body}",
-                        (int)response.StatusCode,
-                        json);
+                    _logger.LogWarning("Twenty CRM HTTP {StatusCode}: {Body}", (int)response.StatusCode, json);
                     return CrmOperationResult.Fail($"Twenty CRM HTTP {(int)response.StatusCode}.");
                 }
 

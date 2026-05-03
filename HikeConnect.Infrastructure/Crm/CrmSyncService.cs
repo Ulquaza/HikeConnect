@@ -12,9 +12,7 @@ namespace HikeConnect.Infrastructure.Crm
             _crmClient = crmClient;
         }
 
-        public Task<CrmOperationResult> SyncBehavioralProfileAsync(
-            CrmBehavioralLeadSyncRequest request,
-            CancellationToken cancellationToken = default) =>
-            _crmClient.UpsertBehavioralLeadAsync(request, cancellationToken);
+        public Task<CrmOperationResult> SyncBehavioralProfileAsync(CrmBehavioralLeadSyncRequest request, CancellationToken cancellationToken = default)
+            => _crmClient.UpsertBehavioralLeadAsync(request, cancellationToken);
     }
 }
