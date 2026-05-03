@@ -29,11 +29,6 @@ namespace HikeConnect.WebApp
 
             builder.Services.AddScoped<JwtAuthMessageHandler>();
 
-            builder.Services.AddHttpClient("NoAuth", client =>
-            {
-                client.BaseAddress = apiBaseUri;
-            });
-
             builder.Services.AddHttpClient("HikeConnect.Api", client =>
             {
                 client.BaseAddress = apiBaseUri;

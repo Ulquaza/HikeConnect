@@ -10,16 +10,14 @@ namespace HikeConnect.WebApp.Handlers
     public class JwtAuthMessageHandler : DelegatingHandler
     {
         private readonly JwtAuthStateProvider _authProvider;
-        private readonly HttpClient _httpClient;
         private readonly Uri _baseUri;
         private static readonly SemaphoreSlim _refreshLock = new SemaphoreSlim(1, 1);
         private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.Web);
 
-        public JwtAuthMessageHandler(JwtAuthStateProvider authProvider, Uri baseUri, IHttpClientFactory factory)
+        public JwtAuthMessageHandler(JwtAuthStateProvider authProvider, Uri baseUri)
         {
             _authProvider = authProvider;
             _baseUri = baseUri;
-            _httpClient = factory.CreateClient("NoAuth");
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -38,7 +36,7 @@ namespace HikeConnect.WebApp.Handlers
                         var refreshRequest = new HttpRequestMessage(HttpMethod.Get, refreshUri);
                         refreshRequest.SetBrowserRequestCredentials(BrowserRequestCredentials.Include); // не добавляем токен к запросу обновления
 
-                        var response = await _httpClient.SendAsync(refreshRequest, cancellationToken); // кидает ошибку 401 в браузере
+                        var response = await base.SendAsync(refreshRequest, cancellationToken); // кидает ошибку 401 в браузере
                         var raw = await response.Content.ReadAsStringAsync(cancellationToken);
                         Console.WriteLine($"REFRESH: {response.StatusCode} {raw}"); // временно, для дебага на сервере
                         if (response.IsSuccessStatusCode)
