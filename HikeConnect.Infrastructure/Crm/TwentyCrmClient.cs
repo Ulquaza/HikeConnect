@@ -9,12 +9,12 @@ using Microsoft.Extensions.Options;
 namespace HikeConnect.Infrastructure.Crm
 {
     /// <summary>
-    /// Twenty Core API (/graphql) sync via find/update-or-create.
-    /// Uses operations observed in Twenty UI: findManyBehavioralleads,
-    /// updateBehaviorallead, createBehaviorallead.
+    /// Twenty REST Core API sync for behavioralleads via find/update-or-create.
     /// </summary>
     public sealed class TwentyCrmClient : ICrmClient
     {
+        private const string BehavioralleadsPath = "rest/behavioralleads";
+
         private readonly HttpClient _http;
         private readonly CrmTwentySettings _twentySettings;
         private readonly ILogger<TwentyCrmClient> _logger;
@@ -52,97 +52,126 @@ namespace HikeConnect.Infrastructure.Crm
                 ["profileupdatedat"] = request.ProfileUpdatedAt.ToUniversalTime().ToString("o"),
             };
 
-            var path = string.IsNullOrWhiteSpace(_twentySettings.GraphQlPath)
-                ? "graphql"
-                : _twentySettings.GraphQlPath.TrimStart('/');
-
             try
             {
+                _logger.LogInformation(
+                    "Twenty CRM sync started for behavioral lead. SourceUserId: {SourceUserId}, SourceProfileId: {SourceProfileId}, Email: {Email}.",
+                    request.SourceUserId,
+                    request.SourceProfileId,
+                    request.Email);
+
                 var existingId = await FindExistingBehavioralLeadIdAsync(
-                    path,
                     request.SourceUserId.ToString("D"),
                     cancellationToken).ConfigureAwait(false);
 
                 if (!string.IsNullOrWhiteSpace(existingId))
                 {
-                    var updateQuery =
-                        "mutation UpdateOneBehaviorallead($idToUpdate: UUID!, $input: BehavioralleadUpdateInput!) { " +
-                        "updateBehaviorallead(id: $idToUpdate, data: $input) { id } }";
-                    var updateVariables = new Dictionary<string, object?>
-                    {
-                        ["idToUpdate"] = existingId,
-                        ["input"] = record,
-                    };
+                    _logger.LogInformation(
+                        "Twenty CRM behavioral lead found by sourceuserid. SourceUserId: {SourceUserId}, ExistingId: {ExistingId}. Updating.",
+                        request.SourceUserId,
+                        existingId);
 
-                    var updateResult = await SendGraphQlAsync(path, updateQuery, updateVariables, cancellationToken).ConfigureAwait(false);
+                    var patchPath = $"{BehavioralleadsPath}/{Uri.EscapeDataString(existingId)}";
+                    var updateResult = await SendRestAsync(
+                        new HttpMethod("PATCH"),
+                        patchPath,
+                        record,
+                        cancellationToken).ConfigureAwait(false);
                     if (!updateResult.Success)
                         return updateResult.Error!;
 
-                    var updatedId = TryReadFieldId(updateResult.Data!.Value, "updateBehaviorallead");
+                    var updatedId = TryReadIdFromRestPayload(updateResult.Data!.Value);
+                    _logger.LogInformation(
+                        "Twenty CRM behavioral lead updated. SourceUserId: {SourceUserId}, ExistingId: {ExistingId}, ReturnedId: {ReturnedId}.",
+                        request.SourceUserId,
+                        existingId,
+                        updatedId);
                     return CrmOperationResult.Ok(updatedId ?? existingId);
                 }
 
-                var createQuery =
-                    "mutation CreateOneBehaviorallead($input: BehavioralleadCreateInput!) { " +
-                    "createBehaviorallead(data: $input) { id } }";
-                var createVariables = new Dictionary<string, object?>
-                {
-                    ["input"] = record,
-                };
+                _logger.LogInformation(
+                    "Twenty CRM behavioral lead was not found by sourceuserid. SourceUserId: {SourceUserId}. Creating.",
+                    request.SourceUserId);
 
-                var createResult = await SendGraphQlAsync(path, createQuery, createVariables, cancellationToken).ConfigureAwait(false);
+                var createResult = await SendRestAsync(
+                    HttpMethod.Post,
+                    BehavioralleadsPath,
+                    record,
+                    cancellationToken).ConfigureAwait(false);
                 if (!createResult.Success)
                     return createResult.Error!;
 
-                var createdId = TryReadFieldId(createResult.Data!.Value, "createBehaviorallead");
+                var createdId = TryReadIdFromRestPayload(createResult.Data!.Value);
+                _logger.LogInformation(
+                    "Twenty CRM behavioral lead created. SourceUserId: {SourceUserId}, CreatedId: {CreatedId}.",
+                    request.SourceUserId,
+                    createdId);
                 return CrmOperationResult.Ok(createdId);
             }
             catch (OperationCanceledException)
             {
+                _logger.LogWarning(
+                    "Twenty CRM sync cancelled for behavioral lead. SourceUserId: {SourceUserId}, SourceProfileId: {SourceProfileId}.",
+                    request.SourceUserId,
+                    request.SourceProfileId);
                 throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Twenty CRM sync failed.");
+                _logger.LogError(
+                    ex,
+                    "Twenty CRM sync failed for behavioral lead. SourceUserId: {SourceUserId}, SourceProfileId: {SourceProfileId}, Email: {Email}.",
+                    request.SourceUserId,
+                    request.SourceProfileId,
+                    request.Email);
                 return CrmOperationResult.Fail(ex.Message);
             }
         }
 
-        private async Task<string?> FindExistingBehavioralLeadIdAsync(string path, string sourceUserId, CancellationToken cancellationToken)
+        private async Task<string?> FindExistingBehavioralLeadIdAsync(string sourceUserId, CancellationToken cancellationToken)
         {
-            var findQuery =
-                "query FindManyBehavioralleads($sourceuserid: String!) { " +
-                "findManyBehavioralleads(filter: { sourceuserid: { eq: $sourceuserid } }, first: 1) { " +
-                "edges { node { id } } } }";
-
-            var variables = new Dictionary<string, object?>
-            {
-                ["sourceuserid"] = sourceUserId,
-            };
-
-            var result = await SendGraphQlAsync(path, findQuery, variables, cancellationToken).ConfigureAwait(false);
+            var filter = $"sourceuserid[eq]:\"{sourceUserId}\"";
+            var path = $"{BehavioralleadsPath}?limit=1&filter={Uri.EscapeDataString(filter)}";
+            _logger.LogDebug(
+                "Twenty CRM find behavioral lead request. SourceUserId: {SourceUserId}, Path: {Path}, Filter: {Filter}.",
+                sourceUserId,
+                path,
+                filter);
+            var result = await SendRestAsync(HttpMethod.Get, path, body: null, cancellationToken).ConfigureAwait(false);
             if (!result.Success || result.Data is null)
+            {
+                _logger.LogWarning(
+                    "Twenty CRM find behavioral lead failed or returned empty data. SourceUserId: {SourceUserId}, Success: {Success}.",
+                    sourceUserId,
+                    result.Success);
                 return null;
+            }
 
-            if (!result.Data.Value.TryGetProperty("findManyBehavioralleads", out var payload))
-                return null;
-
-            return TryReadFirstIdFromCollection(payload);
+            var existingId = TryReadFirstIdFromRestList(result.Data.Value);
+            _logger.LogDebug(
+                "Twenty CRM find behavioral lead completed. SourceUserId: {SourceUserId}, ExistingId: {ExistingId}.",
+                sourceUserId,
+                existingId);
+            return existingId;
         }
 
-        private async Task<(bool Success, JsonElement? Data, CrmOperationResult? Error)> SendGraphQlAsync(
+        private async Task<(bool Success, JsonElement? Data, CrmOperationResult? Error)> SendRestAsync(
+            HttpMethod method,
             string path,
-            string query,
-            Dictionary<string, object?> variables,
+            Dictionary<string, object?>? body,
             CancellationToken cancellationToken)
         {
-            var body = new Dictionary<string, object?>
-            {
-                ["query"] = query,
-                ["variables"] = variables,
-            };
+            using var request = new HttpRequestMessage(method, path);
+            if (body is not null)
+                request.Content = JsonContent.Create(body);
 
-            using var response = await _http.PostAsJsonAsync(path, body, cancellationToken).ConfigureAwait(false);
+            _logger.LogDebug(
+                "Twenty CRM REST request started. Method: {Method}, Path: {Path}, HasBody: {HasBody}.",
+                method.Method,
+                path,
+                body is not null);
+
+            using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
             var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
@@ -151,33 +180,37 @@ namespace HikeConnect.Infrastructure.Crm
                 return (false, null, CrmOperationResult.Fail($"Twenty CRM HTTP {(int)response.StatusCode}."));
             }
 
+            _logger.LogDebug(
+                "Twenty CRM REST request completed. Method: {Method}, Path: {Path}, StatusCode: {StatusCode}, ResponseLength: {ResponseLength}.",
+                method.Method,
+                path,
+                (int)response.StatusCode,
+                json.Length);
+
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            if (root.TryGetProperty("errors", out var errors) && errors.ValueKind == JsonValueKind.Array)
+            return (true, root.Clone(), null);
+        }
+
+        private static string? TryReadIdFromRestPayload(JsonElement payload)
+        {
+            var id = ReadId(payload);
+            if (!string.IsNullOrWhiteSpace(id))
+                return id;
+
+            if (payload.ValueKind == JsonValueKind.Object
+                && payload.TryGetProperty("data", out var dataElement))
             {
-                var message = errors.GetArrayLength() > 0 && errors[0].TryGetProperty("message", out var msg)
-                    ? msg.GetString()
-                    : "GraphQL error.";
-                _logger.LogWarning("Twenty CRM GraphQL error: {Message}. Body: {Body}", message, json);
-                return (false, null, CrmOperationResult.Fail(message ?? "GraphQL error."));
+                id = ReadId(dataElement);
+                if (!string.IsNullOrWhiteSpace(id))
+                    return id;
             }
 
-            if (!root.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Object)
-                return (false, null, CrmOperationResult.Fail("Twenty CRM: missing data in GraphQL response."));
-
-            return (true, data.Clone(), null);
+            return null;
         }
 
-        private static string? TryReadFieldId(JsonElement data, string fieldName)
-        {
-            if (!data.TryGetProperty(fieldName, out var payload))
-                return null;
-
-            return ReadId(payload);
-        }
-
-        private static string? TryReadFirstIdFromCollection(JsonElement payload)
+        private static string? TryReadFirstIdFromRestList(JsonElement payload)
         {
             if (payload.ValueKind == JsonValueKind.Array)
             {
@@ -200,6 +233,26 @@ namespace HikeConnect.Infrastructure.Crm
                     var id = ReadId(node);
                     if (!string.IsNullOrWhiteSpace(id))
                         return id;
+                }
+            }
+
+            if (payload.ValueKind == JsonValueKind.Object
+                && payload.TryGetProperty("data", out var dataElement))
+            {
+                if (dataElement.ValueKind == JsonValueKind.Array)
+                {
+                    if (dataElement.GetArrayLength() == 0)
+                        return null;
+                    return ReadId(dataElement[0]);
+                }
+
+                if (dataElement.ValueKind == JsonValueKind.Object
+                    && dataElement.TryGetProperty("data", out var innerData)
+                    && innerData.ValueKind == JsonValueKind.Array)
+                {
+                    if (innerData.GetArrayLength() == 0)
+                        return null;
+                    return ReadId(innerData[0]);
                 }
             }
 
