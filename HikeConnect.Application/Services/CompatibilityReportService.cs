@@ -1,5 +1,6 @@
-﻿using HikeConnect.Core.Entities;
+using HikeConnect.Core.Entities;
 using HikeConnect.Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace HikeConnect.Application.Services
 {
@@ -36,7 +37,14 @@ namespace HikeConnect.Application.Services
             var existingReport = await _compatibilityReportRepository.GetByUsersIdAsync(authorId, targetId, cancellationToken);
             if (existingReport is not null)
             {
-                await _compatibilityReportRepository.DeleteAsync(existingReport.Id, cancellationToken);
+                try
+                {
+                    await _compatibilityReportRepository.DeleteAsync(existingReport.Id, cancellationToken);
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    // Parallel request may already remove the same stale report.
+                }
             }
 
             var report = _matchingService.BuildCompatibilityReport(authorProfile, targetProfile);

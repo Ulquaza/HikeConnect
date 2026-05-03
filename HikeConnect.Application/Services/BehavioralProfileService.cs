@@ -100,10 +100,7 @@ namespace HikeConnect.Application.Services
             return MapToDto(updated);
         }
 
-        private async Task TrySyncBehavioralProfileToCrmAsync(
-            BehavioralProfile profile,
-            Guid userId,
-            CancellationToken cancellationToken)
+        private async Task TrySyncBehavioralProfileToCrmAsync(BehavioralProfile profile, Guid userId, CancellationToken cancellationToken)
         {
             try
             {
