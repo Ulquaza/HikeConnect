@@ -28,7 +28,11 @@ namespace HikeConnect.Infrastructure.Crm
         {
             if (!_twentySettings.IsConfigured)
             {
-                _logger.LogInformation($"Twenty CRM sync skipped (Crm:Twenty not fully configured). BaseUrl: {_twentySettings.BaseUrl}; ApiKey: {_twentySettings.ApiKey}.");
+                _logger.LogWarning(
+                    "Twenty CRM sync skipped: Crm:Twenty is not fully configured. Enabled: {Enabled}, BaseUrl: {HasBaseUrl}, ApiKey: {HasApiKey}.",
+                    _twentySettings.Enabled,
+                    _twentySettings.BaseUrl,
+                    _twentySettings.ApiKey);
                 return CrmOperationResult.Skipped();
             }
 
