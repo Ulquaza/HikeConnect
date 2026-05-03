@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Globalization;
 using HikeConnect.Core.Dtos;
 using HikeConnect.Core.Interfaces;
 using HikeConnect.Core.Settings;
@@ -49,7 +50,7 @@ namespace HikeConnect.Infrastructure.Crm
                 ["pacingstyle"] = request.PacingStyle,
                 ["disciplinelevel"] = request.DisciplineLevel,
                 ["conflictstrategy"] = request.ConflictStrategy,
-                ["profileupdatedat"] = request.ProfileUpdatedAt.ToUniversalTime().ToString("o"),
+                ["profileupdatedat"] = request.ProfileUpdatedAt.ToUniversalTime().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             };
 
             try
