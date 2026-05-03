@@ -7,6 +7,9 @@ namespace HikeConnect.Core.Interfaces
     {
         Task<BehavioralProfile?> CreateAsync(BehavioralSurveySubmissionRequest request, Guid userId, CancellationToken cancellationToken = default);
 
+        /// <summary>Пересчёт профиля из ответов опроса и обновление существующей записи пользователя.</summary>
+        Task<BehavioralProfile?> UpdateFromSurveyAsync(BehavioralSurveySubmissionRequest request, Guid userId, CancellationToken cancellationToken = default);
+
         Task<BehavioralProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
         Task<BehavioralProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<BehavioralProfile>> GetAllAsync(CancellationToken cancellationToken = default);

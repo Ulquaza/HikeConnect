@@ -9,6 +9,14 @@ services:
       JwtSettings__SecretKey: ${JwtSettings__SecretKey}
       Cors__AllowedOrigins__0: ${Cors__AllowedOrigins__0}
       Cors__AllowedOrigins__1: ${Cors__AllowedOrigins__1}
+      # Twenty CRM — см. .env.example (ключ и имя хоста обязательно проверить под ваш compose Twenty + hike_net)
+      Crm__Twenty__Enabled: ${Crm__Twenty__Enabled:-true}
+      Crm__Twenty__BaseUrl: ${Crm__Twenty__BaseUrl:-http://server:3000}
+      Crm__Twenty__ApiKey: ${Crm__Twenty__ApiKey:-}
+      Crm__Twenty__GraphQlPath: ${Crm__Twenty__GraphQlPath:-graphql}
+      Crm__Twenty__ObjectPluralName: ${Crm__Twenty__ObjectPluralName:-behavioralleads}
+      Crm__Twenty__CreateInputTypeName: ${Crm__Twenty__CreateInputTypeName:-BehavioralLeadCreateInput}
+      Crm__Twenty__CreateManyMutationName: ${Crm__Twenty__CreateManyMutationName:-}
     depends_on:
       db:
         condition: service_healthy

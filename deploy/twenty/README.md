@@ -87,6 +87,9 @@ Checks:
 Complete the coursework steps in Twenty’s UI (see your practice brief):
 
 1. **Custom object** (e.g. behavioral profile / lead) with **5–7 fields** aligned with the survey and user contact data.
+   Add two service fields for idempotent sync from HikeConnect:
+   - `sourceUserId` (**Text, required, unique**) - value from `User.Id`.
+   - `sourceProfileId` (**Text, optional, unique**) - value from `BehavioralProfile.Id`.
 2. **Two roles** with different permissions on that object.
 3. **5–7 test records** with realistic values.
 4. Optional: one **automation** (e.g. notify on new record).
@@ -98,6 +101,15 @@ Complete the coursework steps in Twenty’s UI (see your practice brief):
 3. Workspace-specific API docs and playground appear under the same area after a key exists.
 4. Authenticate HTTP calls with: `Authorization: Bearer YOUR_API_KEY`  
    Core GraphQL is at **`/graphql`** on the same host (see [APIs](https://docs.twenty.com/developers/extend/capabilities/apis)).
+
+### Stage 4 upsert rule (HikeConnect -> Twenty)
+
+For each profile sync request:
+
+1. Find record by `sourceUserId`.
+2. If found, `update` profile fields and keep service keys consistent.
+3. If not found, `create` a new record with both keys (`sourceUserId`, `sourceProfileId`).
+4. If `sourceProfileId` points to another record than `sourceUserId`, log a data-quality conflict and stop automatic create to avoid duplicates.
 
 ## 6. Screenshots for the report
 
@@ -203,6 +215,9 @@ docker compose up -d
 Выполните шаги практики в UI Twenty:
 
 1. **Кастомный объект** (например профиль / лид) с **5–7 полями** по опросу и контактным данным пользователя.
+   Добавьте два служебных поля для идемпотентной синхронизации из HikeConnect:
+   - `sourceUserId` (**Text, обязательно, unique**) - значение `User.Id`.
+   - `sourceProfileId` (**Text, опционально, unique**) - значение `BehavioralProfile.Id`.
 2. **Две роли** с разными правами на этот объект.
 3. **5–7 тестовых записей** с реалистичными данными.
 4. Опционально: одна **автоматизация** (например уведомление при новой записи).
@@ -214,6 +229,15 @@ docker compose up -d
 3. Документация API и playground для вашего workspace появятся в том же разделе после создания ключа.
 4. Заголовок авторизации: `Authorization: Bearer YOUR_API_KEY`  
    Core GraphQL доступен по пути **`/graphql`** на том же хосте (см. [APIs](https://docs.twenty.com/developers/extend/capabilities/apis)).
+
+### Правило upsert для этапа 4 (HikeConnect -> Twenty)
+
+Для каждой синхронизации профиля:
+
+1. Ищите запись по `sourceUserId`.
+2. Если запись найдена, выполняйте `update` полей профиля и сохраняйте консистентность служебных ключей.
+3. Если запись не найдена, выполняйте `create` с обоими ключами (`sourceUserId`, `sourceProfileId`).
+4. Если `sourceProfileId` указывает на другую запись, чем `sourceUserId`, логируйте data-quality конфликт и не создавайте дубль автоматически.
 
 ### 6. Скриншоты для отчёта
 
