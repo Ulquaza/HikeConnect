@@ -2,6 +2,8 @@
 
 @attribute [Authorize]
 
+@using System.Net
+
 @inject JwtAuthStateProvider Auth
 @inject NavigationManager Nav
 @inject HttpClient Http
@@ -11,10 +13,25 @@
 <div class="survey-page">
     <div class="survey-header">
         <h1 class="survey-title">Подбор напарников начинается с тебя</h1>
-        <p class="survey-subtitle">Ответь на несколько вопросов, чтобы мы подобрали тебе совместимых напарников для походов</p>
+        <p class="survey-subtitle">
+            @if (_hasExistingProfile)
+            {
+                <span>Ты уже проходил опрос — можешь ответить заново: мы обновим твой профиль.</span>
+            }
+            else
+            {
+                <span>Ответь на несколько вопросов, чтобы мы подобрали тебе совместимых напарников для походов</span>
+            }
+        </p>
     </div>
 
-    @if (_isSubmitted)
+    @if (_isLoadingProfile)
+    {
+        <section class="survey-card">
+            <p class="survey-status">Загружаем данные опроса…</p>
+        </section>
+    }
+    else if (_isSubmitted)
     {
         <section class="survey-card survey-result">
             <h2>Опрос завершен</h2>
@@ -166,7 +183,17 @@
     private int _currentQuestionIndex;
     private bool _isSubmitting;
     private bool _isSubmitted;
+    private bool _isLoadingProfile = true;
+    private bool _hasExistingProfile;
     private string _statusMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Запрос через Http гарантирует проход JwtAuthMessageHandler (refresh токена); не используем Auth.UserId до первого HTTP.
+        var response = await Http.GetAsync(ApiRoutes.BehavioralProfile.Me);
+        _hasExistingProfile = response.IsSuccessStatusCode;
+        _isLoadingProfile = false;
+    }
 
     private void SelectAnswer(string questionCode, string optionCode)
     {
@@ -220,7 +247,20 @@
                 .ToList()
         };
 
-        var response = await Http.PostAsJsonAsync(ApiRoutes.BehavioralProfile.Base, request);
+        HttpResponseMessage response;
+        if (_hasExistingProfile)
+        {
+            response = await Http.PutAsJsonAsync(ApiRoutes.BehavioralProfile.Survey, request);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                _hasExistingProfile = false;
+                response = await Http.PostAsJsonAsync(ApiRoutes.BehavioralProfile.Base, request);
+            }
+        }
+        else
+        {
+            response = await Http.PostAsJsonAsync(ApiRoutes.BehavioralProfile.Base, request);
+        }
 
         if (response.IsSuccessStatusCode)
         {
