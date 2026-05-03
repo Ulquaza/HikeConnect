@@ -1,14 +1,21 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+﻿using HikeConnect.Core.Dtos;
+using HikeConnect.WebApp.Routing;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.WebAssembly.Http;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace HikeConnect.WebApp.Providers
 {
     public class JwtAuthStateProvider : AuthenticationStateProvider
     {
         private static readonly AuthenticationState NotAuthenticatedState = new AuthenticationState(new ClaimsPrincipal());
+        private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.Web);
 
         private ClaimsPrincipal? _user;
+        private bool _initialized;
+
         public bool IsLoggedIn { get; private set; } = false;
         public bool RefreshFailed { get; private set; } = false;
         public Guid UserId { get; private set; } = Guid.Empty;
@@ -33,6 +40,34 @@ namespace HikeConnect.WebApp.Providers
 
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
             => Task.FromResult((_user is null) ? NotAuthenticatedState : new(_user));
+
+        public async Task InitializeAsync(HttpClient httpClient, Uri baseUri, CancellationToken cancellationToken = default)
+        {
+            if (_initialized) return;
+            _initialized = true;
+
+            try
+            {
+                var refreshUri = new Uri(baseUri, ApiRoutes.Auth.Refresh);
+                using var refreshRequest = new HttpRequestMessage(HttpMethod.Get, refreshUri);
+                refreshRequest.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+                using var response = await httpClient.SendAsync(refreshRequest, cancellationToken);
+                if (!response.IsSuccessStatusCode) return;
+
+                var raw = await response.Content.ReadAsStringAsync(cancellationToken);
+                var content = JsonSerializer.Deserialize<RefreshTokenResponse>(raw, JsonSerializerOptions);
+                if (content?.AccessToken is not null)
+                {
+                    ResetRefreshFailed();
+                    Login(content.AccessToken);
+                }
+            }
+            catch
+            {
+                // На старте нельзя валить приложение из-за неудачного refresh.
+            }
+        }
 
         public void Login(string accessToken)
         {

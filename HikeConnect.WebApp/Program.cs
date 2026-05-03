@@ -37,7 +37,12 @@ namespace HikeConnect.WebApp
             builder.Services.AddScoped(sp =>
                 sp.GetRequiredService<IHttpClientFactory>().CreateClient("HikeConnect.Api"));
 
-            await builder.Build().RunAsync();
+            var host = builder.Build();
+            var authProvider = host.Services.GetRequiredService<JwtAuthStateProvider>();
+            var httpClientFactory = host.Services.GetRequiredService<IHttpClientFactory>();
+            await authProvider.InitializeAsync(httpClientFactory.CreateClient("HikeConnect.Api"), apiBaseUri);
+
+            await host.RunAsync();
         }
     }
 }
