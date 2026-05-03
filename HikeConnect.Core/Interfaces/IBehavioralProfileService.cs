@@ -5,16 +5,16 @@ namespace HikeConnect.Core.Interfaces
 {
     public interface IBehavioralProfileService
     {
-        Task<BehavioralProfile?> CreateAsync(BehavioralSurveySubmissionRequest request, Guid userId, CancellationToken cancellationToken = default);
+        Task<BehavioralProfileDto?> CreateAsync(BehavioralSurveySubmissionRequest request, Guid userId, CancellationToken cancellationToken = default);
 
         /// <summary>Пересчёт профиля из ответов опроса и обновление существующей записи пользователя.</summary>
-        Task<BehavioralProfile?> UpdateFromSurveyAsync(BehavioralSurveySubmissionRequest request, Guid userId, CancellationToken cancellationToken = default);
+        Task<BehavioralProfileDto?> UpdateFromSurveyAsync(BehavioralSurveySubmissionRequest request, Guid userId, CancellationToken cancellationToken = default);
 
-        Task<BehavioralProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-        Task<BehavioralProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
-        Task<IReadOnlyList<BehavioralProfile>> GetAllAsync(CancellationToken cancellationToken = default);
+        Task<BehavioralProfileDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<BehavioralProfileDto?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<BehavioralProfileDto>> GetAllAsync(CancellationToken cancellationToken = default);
 
-        Task<BehavioralProfile?> UpdateAsync(BehavioralProfile profile, Guid userId, CancellationToken cancellationToken = default);
+        Task<BehavioralProfileDto?> UpdateAsync(BehavioralProfile profile, Guid userId, CancellationToken cancellationToken = default);
 
         Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     }
