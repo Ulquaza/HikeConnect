@@ -33,12 +33,42 @@ namespace HikeConnect.Api.Controllers
                 : Ok(profile);
         }
 
+        /// <summary>Повторное прохождение опроса: обновление агрегированного профиля без смены Id.</summary>
+        [HttpPut("survey")]
+        public async Task<IActionResult> UpdateFromSurvey([FromBody] BehavioralSurveySubmissionRequest request, CancellationToken cancellationToken)
+        {
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
+            var profile = await _behavioralProfileService.UpdateFromSurveyAsync(request, authorId, cancellationToken);
+            return profile is null
+                ? NotFound()
+                : Ok(profile);
+        }
+
         [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {
             var profiles = await _behavioralProfileService.GetAllAsync(cancellationToken);
             return Ok(profiles);
+        }
+
+        /// <summary>Профиль текущего пользователя (удобно для клиента без хранения userId до первого HTTP с JWT).</summary>
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMine(CancellationToken cancellationToken)
+        {
+            if (!User.TryGetUserId(out var authorId))
+            {
+                return Unauthorized();
+            }
+
+            var profile = await _behavioralProfileService.GetByUserIdAsync(authorId, cancellationToken);
+            return profile is null
+                ? NotFound()
+                : Ok(profile);
         }
 
         [HttpGet("{id:guid}")]

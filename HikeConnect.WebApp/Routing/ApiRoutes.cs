@@ -17,6 +17,8 @@
         public static class BehavioralProfile
         {
             public const string Base = "behavioralprofile";
+            public const string Me = "behavioralprofile/me";
+            public const string Survey = "behavioralprofile/survey";
             public const string ById = "behavioralprofile/";
             public const string ByUserId = "behavioralprofile/user/";
         }
